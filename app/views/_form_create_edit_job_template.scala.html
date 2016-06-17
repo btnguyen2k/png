@@ -1,0 +1,35 @@
+@(form: play.data.Form[forms.FormCreateEditJobTemplate])(implicit messages: play.i18n.Messages)
+@import play.mvc._
+@import controllers.routes._
+@import utils._
+
+@if(form.hasErrors){
+    <div class="box-header">
+        @_macro_displayFormErrors(form, Array("id", "description", "params"))
+    </div>
+}
+<form role="form" method="post">
+    <input type="hidden" name="editId" value="@form("editId").value">
+    <div class="box-body">
+        <div class="form-group">
+            <label for="job_template_id">@messages.at("msg.job_template.id")</label>
+            <input @if(form("editId").value!=""){disabled="disabled"} type="text" class="form-control" id="job_template_id" name="id" value="@form("id").value" placeholder="@messages.at("msg.job_template.id")">
+        </div>
+        <div class="form-group">
+            <label for="job_template_desc">@messages.at("msg.job_template.desc")</label>
+            <input type="text" class="form-control" id="job_template_desc" name="description" value="@form("description").value" placeholder="@messages.at("msg.job_template.desc")">
+        </div>
+        <div class="form-group">
+            <label for="job_template_params">@messages.at("msg.job_template.params")</label>
+            <textarea class="form-control" rows="8" id="job_template_params" name="params" placeholder="@messages.at("msg.job_template.params")">@form("params").value</textarea>
+        </div>
+    </div>
+    
+    <div class="box-footer">
+        <button type="submit" class="btn btn-sm btn-primary"><i class="fa fa-save"> @messages.at("msg.save")</i></button>
+        <button type="reset" class="btn btn-sm btn-warning"><i class="fa fa-reply"> @messages.at("msg.reset")</i></button>
+        &nbsp;&nbsp;&nbsp;&nbsp;
+        <button type="button" class="btn btn-sm btn-default"
+            onclick="document.location.href='@routes.AdminCPController.jobTemplateList()';"><i class="fa fa-close"> @messages.at("msg.cancel")</i></button>
+    </div>
+</form>

@@ -1,0 +1,25 @@
+@(form: play.data.Form[forms.FormCreateEditJobTemplate])(implicit messages: play.i18n.Messages)
+@import play.mvc._
+@import utils._
+@_layout(
+    active    = "job_template_list"
+){
+<section class="content-header">
+    <h1>@messages.at("msg.job_template.edit")</h1>
+    <ol class="breadcrumb">
+        <li><a href="@routes.AdminCPController.home()"><i class="fa fa-dashboard"></i> @messages.at("msg.home")</a></li>
+        <li><a href="@routes.AdminCPController.jobTemplateList()"><i class="fa fa-tasks"></i> @messages.at("msg.job_templates")</a></li>
+        <li class="active">@messages.at("msg.job_template.edit")</li>
+    </ol>
+</section>
+            
+<section class="content">
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box box-primary">
+                @_form_create_edit_job_template(form)
+            </div>
+        </div>
+    </div>
+</section>
+}

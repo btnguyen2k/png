@@ -1,0 +1,27 @@
+@(form: play.data.Form[forms.FormCreateEditJobInfo], jobTemplates: Array[models.JobTemplateModel])(implicit messages: play.i18n.Messages)
+@import play.mvc._
+@import utils._
+@_layout(
+    active    = "job_list",
+    customCss = Array("TagManager/tagmanager.css"),
+    customJs  = Array("TagManager/tagmanager.js")
+){
+<section class="content-header">
+    <h1>@messages.at("msg.job_info.create")</h1>
+    <ol class="breadcrumb">
+        <li><a href="@routes.AdminCPController.home()"><i class="fa fa-dashboard"></i> @messages.at("msg.home")</a></li>
+        <li><a href="@routes.AdminCPController.jobList()"><i class="fa fa-cogs"></i> @messages.at("msg.job_list")</a></li>
+        <li class="active">@messages.at("msg.job_info.create")</li>
+    </ol>
+</section>
+            
+<section class="content">
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box box-primary">
+                @_form_create_edit_job(form, jobTemplates)
+            </div>
+        </div>
+    </div>
+</section>
+}

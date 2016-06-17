@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+                           http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/context 
+                           http://www.springframework.org/schema/context/spring-context.xsd
+                           http://www.springframework.org/schema/util 
+                           http://www.springframework.org/schema/util/spring-util.xsd">
+
+	<!-- Spring configuration for mode: Single-Server / MySQL database -->
+	<!-- Storage: MySQL to store Job info & Task logs, data is not lost when 
+		the JVM restarts -->
+	<!-- Cache: in-memory caches -->
+	<!-- Queue: MySQL queues to queue tasks/notifications, data is not lost 
+		when the JVM restarts -->
+	<!-- !!!This configuration can be used for production where there is a single 
+		master server !!! -->
+	<!-- Variant: other RDMBS (e.g. PostgreSQL) can be used in replacement for 
+		MySQL -->
+	<!-- Variant: a cache server (e.g. Redis) can be used in replacement for 
+		in-memory queues, then this configuration turns into Multi-Servers / MySQL -->
+
+	<bean id="NODE_ID" class="java.lang.String">
+		<!-- if set to empty/null, node's IP address will be used as node id -->
+		<constructor-arg value="" />
+	</bean>
+
+	<bean id="CACHE_FACTORY" class="com.github.ddth.cacheadapter.guava.GuavaCacheFactory"
+		scope="singleton" init-method="init" destroy-method="destroy">
+		<property name="defaultExpireAfterAccess" value="-1" />
+		<property name="defaultExpireAfterWrite" value="-1" />
+	</bean>
+
+	<bean id="DATASOURCE" class="com.zaxxer.hikari.HikariDataSource"
+		scope="singleton" lazy-init="false">
+		<property name="driverClassName" value="com.mysql.jdbc.Driver" />
+		<property name="jdbcUrl"
+			value="jdbc:mysql://localhost:3306/djs?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;useSSL=false" />
+		<property name="username" value="djs" />
+		<property name="password" value="djs" />
+		<property name="connectionTimeout" value="5000" />
+		<property name="idleTimeout" value="900000" />
+		<property name="maxLifetime" value="1800000" />
+		<property name="connectionTestQuery" value="SELECT 1" />
+		<property name="validationTimeout" value="1500" />
+		<property name="maximumPoolSize" value="4" />
+		<property name="initializationFailFast" value="false" />
+		<property name="connectionInitSql" value="SET NAMES 'utf8'" />
+		<property name="leakDetectionThreshold" value="300000" />
+	</bean>
+
+	<bean id="DAO_USER" class="bo.user.jdbc.JdbcUserDao" scope="singleton"
+		init-method="init" destroy-method="destroy">
+		<property name="cacheFactory" ref="CACHE_FACTORY" />
+		<property name="dataSource" ref="DATASOURCE" />
+	</bean>
+
+	<bean id="DAO_JOBINFO" class="com.github.ddth.djs.bo.job.jdbc.JdbcJobDao"
+		scope="singleton" init-method="init" destroy-method="destroy">
+		<property name="cacheFactory" ref="CACHE_FACTORY" />
+		<property name="dataSource" ref="DATASOURCE" />
+	</bean>
+
+	<bean id="DAO_TASKLOG" class="com.github.ddth.djs.bo.log.jdbc.JdbcTaskLogDao"
+		scope="singleton" init-method="init" destroy-method="destroy">
+		<property name="cacheFactory" ref="CACHE_FACTORY" />
+		<property name="dataSource" ref="DATASOURCE" />
+	</bean>
+
+	<bean id="QUEUE_SERVICE_TASK_FIREOFF" class="queue.JdbcQueueService"
+		init-method="init" destroy-method="destroy">
+		<property name="queue">
+			<bean class="com.github.ddth.queue.impl.universal.UniversalJdbcQueue"
+				scope="singleton" init-method="init" destroy-method="destroy">
+				<property name="dataSource" ref="DATASOURCE" />
+				<property name="tableName" value="queue_taskfireoff" />
+				<property name="tableNameEphemeral" value="queue_taskfireoff_ephemeral" />
+			</bean>
+		</property>
+	</bean>
+
+	<!-- Queue to buffer task results/feedbacks from workers -->
+	<bean id="QUEUE_TASK_FEEDBACK" class="com.github.ddth.queue.impl.universal.UniversalJdbcQueue"
+		scope="singleton" init-method="init" destroy-method="destroy">
+		<property name="dataSource" ref="DATASOURCE" />
+		<property name="tableName" value="queue_taskfeedback" />
+		<property name="tableNameEphemeral" value="queue_taskfeedback_ephemeral" />
+	</bean>
+
+	<!-- beans for development env -->
+	<beans>
+	</beans>
+
+	<!-- beans for production env -->
+	<beans profile="prod,production">
+	</beans>
+</beans>

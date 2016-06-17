@@ -1,0 +1,130 @@
+@(jobList: Array[models.JobInfoModel])(implicit messages: play.i18n.Messages)
+@import play.mvc._
+@import org.apache.commons.lang3._
+@import utils._
+@_layout(
+    active   = "job_list",
+    customCss = Array("AdminLTE-2.3.0/plugins/datatables/dataTables.bootstrap.css"),
+    customJs  = Array("AdminLTE-2.3.0/plugins/datatables/jquery.dataTables.min.js",
+        "AdminLTE-2.3.0/plugins/datatables/dataTables.bootstrap.min.js")
+){
+
+<section class="content-header">
+    <h1>@messages.at("msg.job_list")</h1>
+    <ol class="breadcrumb">
+        <li><a href="@routes.AdminCPController.home()"><i class="fa fa-dashboard"></i> @messages.at("msg.home")</a></li>
+        <li class="active">@messages.at("msg.job_list")</li>
+    </ol>
+</section>
+<section class="content">
+    @defining(Controller.flash(AdminCPController.VIEW_JOB_LIST)){msg =>
+        @if(msg != null){
+            <div class="row">
+                <div class="col-xs-12">
+                    @_macro_displayPageFlashMessage(msg)
+                </div>
+            </div>
+        }
+    }
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box box-primary">
+                <div class="box-header">
+                    <a href="@routes.AdminCPController.createJob()" class="btn btn-sm btn-primary"><i class="fa fa-plus"> @messages.at("msg.job_info.create")</i></a>
+                </div>
+              
+                <div class="box-body table-responsive">
+                    <table class="table table-bordered table-condensed table-striped table-hover" id="tbl_job_templates">
+                        <thead>
+                            <tr>
+                                <th style="text-align: center; vertical-align: middle;">@messages.at("msg.job_info.id")</th>
+                                <th style="text-align: center; vertical-align: middle;">@messages.at("msg.job_info.desc")</th>
+                                <th style="text-align: center; vertical-align: middle;">@messages.at("msg.job_info.tags")</th>
+                                <th style="text-align: center; vertical-align: middle;">@messages.at("msg.job_info.update_timestamp")</th>
+                                <th style="text-align: center; vertical-align: middle;">@messages.at("msg.actions")</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for(job <- jobList){
+                                <tr>
+                                    <td style="text-align: center; vertical-align: middle;">@job.getId()</td>
+                                    <td style="vertical-align: middle;" class="col-xs-5">
+                                        <p>@job.getDescription()</p>
+                                        <p style="font-size: x-small">@messages.at("msg.job_info.params"): <code>@job.getParams()</code></p>
+                                        <p style="font-size: x-small">@messages.at("msg.job_info.cron"): <code>@job.getCron()</code></p>
+                                    </td>
+                                    <td style="text-align: center; vertical-align: middle;">
+                                        @for(tag <- job.getTagsAsArray()){@tag }
+                                    </td>
+                                    <td style="text-align: center; vertical-align: middle;">@job.getUpdateTimestampStr()</td>
+                                    <td style="text-align: center; vertical-align: middle; font-size: x-large;" class="text-nowrap">
+                                        @if(job.isRunning()){
+                                            <a data-id="btnJobInfoStop@job.getId()" href="javascript:;" data-toggle="tooltip" onClick="stopJob('@job.getId');"
+                                                title="@messages.at("msg.job_info.stop")" style="color:red;"
+                                            class="fa fa-stop"></a><a data-id="btnJobInfoStart@job.getId()" href="javascript:;" data-toggle="tooltip" onClick="startJob('@job.getId');"
+                                                title="@messages.at("msg.job_info.start")" style="color:blue;" class="fa fa-play"></a>
+                                        }else{
+                                            <a data-id="btnJobInfoStop@job.getId()" href="javascript:;" data-toggle="tooltip" onClick="stopJob('@job.getId');"
+                                                title="@messages.at("msg.job_info.stop")" style="color:red;"
+                                            class="fa fa-stop"></a><a data-id="btnJobInfoStart@job.getId()" href="javascript:;" data-toggle="tooltip" onClick="startJob('@job.getId');"
+                                                title="@messages.at("msg.job_info.start")" style="color:blue;" class="fa fa-play"></a>
+                                        }
+                                        &nbsp;
+                                        <a href="@job.urlEdit()" data-toggle="tooltip" title="@messages.at("msg.edit")" style="color:green;" class="fa fa-edit"></a>
+                                        <a href="@job.urlDelete()" data-toggle="tooltip" title="@messages.at("msg.delete")" style="color:red;" class="fa fa-remove"></a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="box-footer">
+                    <a href="@routes.AdminCPController.createJob()" class="btn btn-sm btn-primary"><i class="fa fa-plus"> @messages.at("msg.job_info.create")</i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script type="text/javascript">
+function _startStopJob(url, id) {
+    $.post(url, function(response){
+        if (response.status == 200) {
+            if (response.data){
+                $("a[data-id='btnJobInfoStop"+id+"']").show();
+                $("a[data-id='btnJobInfoStart"+id+"']").hide();
+            } else {
+                $("a[data-id='btnJobInfoStop"+id+"']").hide();
+                $("a[data-id='btnJobInfoStart"+id+"']").show();
+            }
+        }
+    });
+}
+
+function startJob(id){
+    var url = '@routes.AdminCPController.apiStartJob()?id='+id;
+    _startStopJob(url, id);
+}
+
+function stopJob(id){
+    var url = '@routes.AdminCPController.apiStopJob()?id='+id;
+    _startStopJob(url, id);
+}
+
+$(document).ready(function() {
+    $('#tbl_job_templates').DataTable({
+        "paging"      : true,
+        "pageLength"  : 10,
+        "lengthChange": false,
+        "searching"   : true,
+        "ordering"    : false,
+        "info"        : true,
+        "autoWidth"   : false
+    });
+    @for(job <- jobList){
+        @if(job.isRunning()){$("a[data-id='btnJobInfoStart@job.getId()']").hide();}else{$("a[data-id='btnJobInfoStop@job.getId()']").hide();}
+    }
+});
+</script>
+}

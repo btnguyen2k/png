@@ -1,0 +1,105 @@
+@(form: play.data.Form[forms.FormCreateEditJobInfo], jobTemplates: Array[models.JobTemplateModel])(implicit messages: play.i18n.Messages)
+@import play.mvc._
+@import controllers.routes._
+@import utils._
+@import org.apache.commons.lang3.StringEscapeUtils
+@if(form.hasErrors){
+    <div class="box-header">
+        @_macro_displayFormErrors(form, Array("id", "description", "params"))
+    </div>
+}
+<form role="form" method="post" id="frmCreateEditJob">
+    <input type="hidden" name="editId" value="@form("editId").value">
+    <div class="box-body">
+        <div class="form-group">
+            <label for="job_id">@messages.at("msg.job_info.id")</label>
+            <input @if(form("editId").value!=""){disabled="disabled"} type="text" class="form-control" id="job_id" name="id" value="@form("id").value" placeholder="@messages.at("msg.job_info.id")">
+        </div>
+        <div class="form-group">
+            <label for="job_desc">@messages.at("msg.job_info.desc")</label>
+            <input type="text" class="form-control" id="job_desc" name="description" value="@form("description").value" placeholder="@messages.at("msg.job_info.desc")">
+        </div>
+        <div class="form-group">
+            <label for="job_template">@messages.at("msg.job_info.template")</label>
+            <select class="form-control" name="templateId" id="job_template">
+                <option value="">-= @messages.at("msg.job_info.template") =-</option>
+                @for(jobT <- jobTemplates){
+                    <option value="@jobT.getId()" @if(form("templateId").value==jobT.getId()){selected="selected"}>@jobT.getId() (@jobT.getDescription())</option>
+                }
+            </select>
+        </div>
+        <div class="form-group">
+            <label>@messages.at("msg.job_info.cron"): (@messages.at("msg.job_info.cron.desc")) </label>
+            <div class="row">
+	            <div class="col-sm-1">
+	                <input type="text" class="form-control" name="cronSecond" value="@form("cronSecond").value" placeholder="@messages.at("msg.job_info.cron.second")">
+	            </div>
+	            <div class="col-sm-2">
+	                <input type="text" class="form-control" name="cronMinute" value="@form("cronMinute").value" placeholder="@messages.at("msg.job_info.cron.minute")">
+	            </div>
+                <div class="col-sm-2">
+                    <input type="text" class="form-control" name="cronHour" value="@form("cronHour").value" placeholder="@messages.at("msg.job_info.cron.hour")">
+                </div>
+                <div class="col-sm-2">
+                    <input type="text" class="form-control" name="cronDay" value="@form("cronDay").value" placeholder="@messages.at("msg.job_info.cron.day")">
+                </div>
+                <div class="col-sm-3">
+                    <input type="text" class="form-control" name="cronMonth" value="@form("cronMonth").value" placeholder="@messages.at("msg.job_info.cron.month")">
+                </div>
+                <div class="col-sm-2">
+                    <input type="text" class="form-control" name="cronDow" value="@form("cronDow").value" placeholder="@messages.at("msg.job_info.cron.dow")">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="job_params">@messages.at("msg.job_info.params")</label>
+                <textarea class="form-control" rows="4" id="job_params" name="params" placeholder="@messages.at("msg.job_info.params")">@form("params").value</textarea>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="job_tags">@messages.at("msg.job_info.tags"): </label>
+            <input type="text" class="form-control" id="job_tags" name="_tags_" value="@form("tags").value" placeholder="@messages.at("msg.job_info.tags")">
+        </div>
+    </div>
+    
+    <div class="box-footer">
+        <button type="submit" class="btn btn-sm btn-primary"><i class="fa fa-save"> @messages.at("msg.save")</i></button>
+        <button type="reset" onclick="javascript:formReset()" class="btn btn-sm btn-warning"><i class="fa fa-reply"> @messages.at("msg.reset")</i></button>
+        &nbsp;&nbsp;&nbsp;&nbsp;
+        <button type="button" class="btn btn-sm btn-default"
+            onclick="document.location.href='@routes.AdminCPController.jobList()';"><i class="fa fa-close"> @messages.at("msg.cancel")</i></button>
+    </div>
+</form>
+<script type="text/javascript">
+function formReset() {
+    $('#frmCreateEditJob')[0].reset();
+    
+    var regExp = /[,;\s]+/;
+    var tags;
+    var i;
+    
+    $("#job_tags").tagsManager('empty');
+    tags = "@form("tags").value".split(regExp);
+    for ( i = 0; i < tags.length; i++ ) {
+        $("#job_tags").tagsManager('pushTag', tags[i]);
+    }
+}
+
+$(document).ready(function(){
+    var JOB_TEMPLATES = {
+        @for((jobT,_index) <- jobTemplates.zipWithIndex){"@jobT.getId":"@Html(StringEscapeUtils.escapeEcmaScript(jobT.getParams()))"@if(_index != jobTemplates.size-1){,}}
+    };
+
+    $("#job_tags").tagsManager({
+        prefilled : "@form("tags").value",
+        tagClass  : "label label-success",
+        delimiters: [9, 13, 44, 59],
+        hiddenTagListName: "tags"
+    });
+    $("#job_template").change(function(){
+        var ID = $('#job_template').val();
+        if ( JOB_TEMPLATES[ID] ) {
+            $('#job_params').val(JOB_TEMPLATES[ID]);
+        }
+    });
+});
+</script>

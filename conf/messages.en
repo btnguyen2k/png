@@ -1,0 +1,85 @@
+msg.login = Login
+msg.logout = Logout
+
+msg.action = Action
+msg.actions = Actions
+msg.save = Save
+msg.reset = Reset
+msg.ok = Ok
+msg.cancel = Cancel
+msg.delete = Delete
+msg.edit = Edit
+
+msg.home = Home
+msg.dashboard = Dashboard
+
+msg.login_admincp = Login to AdminCP
+
+error.login.failed = Login failed: username and/or password do not match!
+
+msg.jobs = Jobs
+msg.job = Job
+msg.tasks = Tasks
+msg.task = Task
+msg.job_templates = Job Templates
+msg.job_template = Job Template
+
+msg.task_status.0 = New
+msg.task_status.1 = Picked-up
+msg.task_status.2 = Skipped
+msg.task_status.3 = Returned
+msg.task_status.10 = Done
+msg.task_status.11 = Cancelled
+msg.task_status.12 = Error
+
+msg.job_template.id = ID
+msg.job_template.desc = Description
+msg.job_template.update_timestamp = Update Timestamp
+msg.job_template.params = Job Parameters
+
+msg.job_template.create = Create Job Template
+msg.job_template.create.done = Job Template "{0}" has been created successfully.
+msg.job_template.edit = Edit Job Template
+msg.job_template.edit.done = Job Template "{0}" has been updated successfully.
+msg.job_template.delete = Delete Job Template
+msg.job_template.delete.done = Job Template "{0}" has been deleted successfully.
+
+error.job_template.empty_id = Error: Empty job template id!
+error.job_template.exists = Error: Job template "{0}" already existed!
+error.job_template.not_found = Error: Job template "{0}" does not exist!
+
+msg.job_list = Job List
+
+msg.job_info.create = Create Job
+msg.job_info.create.done = Job "{0}" has been created successfully.
+msg.job_info.edit = Edit Job
+msg.job_info.edit.done = Job "{0}" has been updated successfully.
+msg.job_info.delete = Delete Job
+msg.job_info.delete.done = Job "{0}" has been deleted successfully.
+msg.job_info.start = Start
+msg.job_info.stop = Stop
+
+msg.job_info.id = ID
+msg.job_info.desc = Description
+msg.job_info.template = Job Template
+msg.job_info.tags = Tags
+msg.job_info.update_timestamp = Update Timestamp
+msg.job_info.params = Job Parameters
+msg.job_info.cron = Cron Settings
+msg.job_info.cron.desc = <sec> <min> <hr> <day> <mon> <dow>
+msg.job_info.cron.second = Second
+msg.job_info.cron.minute = Minute
+msg.job_info.cron.hour = Hour
+msg.job_info.cron.day = Day of Month
+msg.job_info.cron.month = Month
+msg.job_info.cron.dow = Day of Week
+
+error.job_info.empty_id = Error: Empty job id!
+error.job_info.exists = Error: Job "{0}" already existed!
+error.job_info.not_found = Error: Job "{0}" does not exist!
+error.job_info.cron.invalid_second = Error: Invalid cron's second config!
+error.job_info.cron.invalid_minute = Error: Invalid cron's minute config!
+error.job_info.cron.invalid_hour = Error: Invalid cron's hour config!
+error.job_info.cron.invalid_day = Error: Invalid cron's day config!
+error.job_info.cron.invalid_month = Error: Invalid cron's month config!
+error.job_info.cron.invalid_dow = Error: Invalid cron's day-of-week config!

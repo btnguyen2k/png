@@ -1,0 +1,162 @@
+@()(implicit messages: play.i18n.Messages)
+@import play.mvc._
+@import utils._
+@import com.github.ddth.djs.utils._
+@_layout(
+    active   = "home",
+    customCss = Array("AdminLTE-2.3.0/plugins/datatables/dataTables.bootstrap.css"),
+    customJs  = Array("AdminLTE-2.3.0/plugins/datatables/jquery.dataTables.min.js",
+        "AdminLTE-2.3.0/plugins/datatables/dataTables.bootstrap.min.js",
+        "Highcharts-4.2.5/js/highcharts.js")
+){
+<section class="content-header">
+    <h1>@messages.at("msg.dashboard")</h1>
+    <ol class="breadcrumb">
+        <li><a href="@routes.AdminCPController.home()"><i class="fa fa-dashboard"></i> @messages.at("msg.home")</a></li>
+        <li class="active">@messages.at("msg.dashboard")</li>
+    </ol>
+</section>
+            
+<section class="content">
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box box-primary">
+                    <div class="box-header">
+                        <h1>Latest Task Status</h1>
+				    </div>
+                    <div class="box-body">
+                        <div class="row">
+	                        <div id="chart_pie" class="col-xs-5">
+	                        </div>
+	                        <div class="col-xs-7">
+                                <table class="table table-bordered table-hover" id="tblTaskLog">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align: center">Job</th>
+                                        <th style="text-align: center">Status</th>
+                                        <th style="text-align: center">Created</th>
+                                        <th style="text-align: center">Pickup</th>
+                                        <th style="text-align: center">Finish</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="row">
+                        </div>
+                    </div>
+            </div>
+        </div>
+    </div>
+</section>
+<script type="text/javascript">
+
+function updatePieChart(series) {
+    $.get("@routes.AdminCPController.ajajxLatestTaskLogsByCategories()", function(data){
+        if (data.status==200){
+            var seriesData = [];
+            $.each(data.data, function(key, value){
+                seriesData.push([key, value]);
+            });
+            series.setData(seriesData, true);
+        }
+    });
+}
+
+$(document).ready(function(){
+    var table = $('#tblTaskLog').DataTable({
+        ordering    : false,
+        lengthChange: false,
+        ajax: {
+            url    : '@routes.AdminCPController.ajaxLatestTaskLogs()',
+            dataSrc: 'data'
+        },
+        columns: [
+            {data: 'job_id'},
+            {data: 'status_str'},
+            {data: 'timestamp_create'},
+            {data: 'timestamp_pickup'},
+            {data: 'timestamp_finish'}
+        ],
+        createdRow: function(row, data, index){
+            $('td', row).eq(1).css('color', 'White');
+            if (data['status'] == '@DjsConstants.TASK_STATUS_FINISHED_CANCEL') {
+                $('td', row).eq(1).css('background-color', 'Grey');
+            } else if(data['status'] == '@DjsConstants.TASK_STATUS_FINISHED_OK') {
+                $('td', row).eq(1).css('background-color', 'Green');
+            } else if(data['status'] == '@DjsConstants.TASK_STATUS_FINISHED_ERROR') {
+                $('td', row).eq(1).css('background-color', 'Red');
+            } else if(data['status'] == '@DjsConstants.TASK_STATUS_NEW') {
+                $('td', row).eq(1).css('background-color', 'Blue');
+            } else if(data['status'] == '@DjsConstants.TASK_STATUS_PICKED') {
+                $('td', row).eq(1).css('background-color', '#C0DCC0').css('color', 'White');
+            } else if(data['status'] == '@DjsConstants.TASK_STATUS_RETURNED') {
+                $('td', row).eq(1).css('background-color', '#000080');
+            } else if(data['status'] == '@DjsConstants.TASK_STATUS_SKIPPED') {
+                $('td', row).eq(1).css('background-color', 'Maroon');
+            }
+        },
+        oLanguage: {
+            oPaginate: {
+                sFirst   : '<<',
+                sLast    : '>>',
+                sNext    : '>',
+                sPrevious: '<'
+            }
+        }
+    });
+    setInterval(function(){
+        table.ajax.reload(null, false);
+    }, 5000);
+
+    Highcharts.setOptions({
+        colors: ['Black', 'Green', 'Red', 'Blue', '#C0DCC0', '#000080', 'Maroon']
+    });
+
+	$('#chart_pie').highcharts({
+        chart: {
+            plotBackgroundColor: null,
+            plotBorderWidth    : null,
+            plotShadow         : false,
+            type               : 'pie',
+            events: {
+                load: function(){
+                    var series = this.series[0];
+                    updatePieChart(series);
+                	setInterval(function () {
+                	    updatePieChart(series);
+                    }, 5000);
+                }
+            }
+        },
+        title: {
+            text: ''
+        },
+        tooltip: {
+            pointFormat: '<b>{point.percentage:.1f}%</b>'
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                dataLabels: {
+                    enabled: false,
+                    format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+                    style: {
+                        color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                    }
+                },
+                showInLegend: true
+            }
+        },
+        series: [{
+            'name'      : 'Status',
+            colorByPoint: true,
+            data        : [{}]
+        }]
+    });
+});
+</script>
+}

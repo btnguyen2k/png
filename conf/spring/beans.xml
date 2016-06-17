@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+                           http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/context 
+                           http://www.springframework.org/schema/context/spring-context.xsd
+                           http://www.springframework.org/schema/util 
+                           http://www.springframework.org/schema/util/spring-util.xsd">
+
+	<bean id="CACHE_FACTORY" class="com.github.ddth.cacheadapter.redis.RedisCacheFactory"
+		scope="singleton" init-method="init" destroy-method="destroy">
+		<property name="redisHost" ref="_redis_host" />
+		<property name="redisPort" ref="_redis_port" />
+		<property name="defaultExpireAfterAccess" value="-1" />
+		<property name="defaultExpireAfterWrite" value="-1" />
+	</bean>
+
+	<bean id="DATASOURCE" class="com.zaxxer.hikari.HikariDataSource"
+		scope="singleton">
+		<property name="driverClassName" value="com.mysql.jdbc.Driver" />
+		<property name="jdbcUrl" ref="_db_url" />
+		<property name="username" ref="_db_user" />
+		<property name="password" ref="_db_password" />
+		<property name="connectionTimeout" value="5000" />
+		<property name="idleTimeout" value="900000" />
+		<property name="maxLifetime" value="1800000" />
+		<property name="connectionTestQuery" value="SELECT 1" />
+		<property name="validationTimeout" value="1500" />
+		<property name="maximumPoolSize" value="4" />
+		<property name="initializationFailFast" value="false" />
+		<!-- <property name="connectionInitSql" value="SET NAMES 'utf8'"/> -->
+		<property name="leakDetectionThreshold" value="300000" />
+	</bean>
+
+	<bean id="DAO_JOBINFO" class="com.github.ddth.djs.bo.job.jdbc.JdbcJobDao"
+		scope="singleton" init-method="init" destroy-method="destroy">
+		<property name="cacheFactory" ref="CACHE_FACTORY" />
+		<property name="dataSource" ref="DATASOURCE" />
+	</bean>
+
+	<bean id="DAO_TASKLOG" class="com.github.ddth.djs.bo.log.jdbc.JdbcTaskLogDao"
+		scope="singleton" init-method="init" destroy-method="destroy">
+		<property name="cacheFactory" ref="CACHE_FACTORY" />
+		<property name="dataSource" ref="DATASOURCE" />
+	</bean>
+
+	<!-- Queue to push task notifications to workers -->
+	<bean id="KAFKA_CLIENT_TASKS" class="com.github.ddth.kafka.KafkaClient"
+		scope="singleton" init-method="init" destroy-method="destroy">
+		<property name="kafkaBootstrapServers" ref="_kafka_bootstrapServers_tasks" />
+	</bean>
+
+	<!-- Queue to buffer task results/feedbacks -->
+	<bean id="KAFKA_CLIENT_FEEDBACK" class="com.github.ddth.kafka.KafkaClient"
+		scope="singleton" init-method="init" destroy-method="destroy">
+		<property name="kafkaBootstrapServers" ref="_kafka_bootstrapServers_feedback" />
+	</bean>
+
+	<!-- beans for development env -->
+	<beans>
+		<bean name="_redis_host" class="java.lang.String">
+			<constructor-arg value="localhost" />
+		</bean>
+		<bean name="_redis_port" class="java.lang.Integer">
+			<constructor-arg value="6379" />
+		</bean>
+
+		<bean name="_db_url" class="java.lang.String">
+			<constructor-arg
+				value="jdbc:mysql://localhost:3306/temp?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=UTF-8" />
+		</bean>
+		<bean id="_db_user" class="java.lang.String">
+			<constructor-arg value="test" />
+		</bean>
+		<bean id="_db_password" class="java.lang.String">
+			<constructor-arg value="test" />
+		</bean>
+
+		<bean id="_kafka_bootstrapServers_tasks" class="java.lang.String">
+			<constructor-arg value="localhost:9092" />
+		</bean>
+		<bean id="_kafka_bootstrapServers_feedback" class="java.lang.String">
+			<constructor-arg value="localhost:9092" />
+		</bean>
+	</beans>
+
+	<!-- beans for production env -->
+	<beans profile="prod,production">
+		<bean name="_redis_host" class="java.lang.String">
+			<constructor-arg value="localhost" />
+		</bean>
+		<bean name="_redis_port" class="java.lang.Integer">
+			<constructor-arg value="6379" />
+		</bean>
+
+		<bean name="_db_url" class="java.lang.String">
+			<constructor-arg
+				value="jdbc:mysql://_dbhost_:3306/_dbname_?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=UTF-8" />
+		</bean>
+		<bean id="_db_user" class="java.lang.String">
+			<constructor-arg value="_dbuser_" />
+		</bean>
+		<bean id="_db_password" class="java.lang.String">
+			<constructor-arg value="_dbpassword_" />
+		</bean>
+
+		<bean id="_kafka_bootstrapServers_tasks" class="java.lang.String">
+			<constructor-arg value="_host1:9092,_host2:9092,_host3:9092" />
+		</bean>
+		<bean id="_kafka_bootstrapServers_feedback" class="java.lang.String">
+			<constructor-arg value="_host1:9092,_host2:9092,_host3:9092" />
+		</bean>
+	</beans>
+</beans>
