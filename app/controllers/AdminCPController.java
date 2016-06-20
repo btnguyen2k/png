@@ -27,18 +27,22 @@ import akka.actor.ActorRef;
 import akka.cluster.pubsub.DistributedPubSub;
 import akka.cluster.pubsub.DistributedPubSubMediator;
 import akka.utils.AkkaConstants;
+import bo.app.AppBo;
+import bo.app.IAppDao;
 import compositions.AdminAuthRequired;
+import forms.FormCreateEditApplication;
 import forms.FormCreateEditJobInfo;
 import forms.FormCreateEditJobTemplate;
 import forms.FormLogin;
+import models.AppModel;
 import models.JobInfoModel;
 import models.JobTemplateModel;
 import play.data.Form;
 import play.i18n.Messages;
 import play.mvc.Result;
 import play.twirl.api.Html;
-import utils.DjsMasterConstants;
 import utils.JobUtils;
+import utils.PngConstants;
 import utils.UserUtils;
 
 /**
@@ -56,7 +60,7 @@ public class AdminCPController extends BaseController {
             synchronized (this) {
                 if (distributedPubSubMediator == null) {
                     distributedPubSubMediator = DistributedPubSub
-                            .get(cluster.get().getClusterActorSystem()).mediator();
+                            .get(getRegistry().getActorSystem()).mediator();
                 }
             }
         }
@@ -123,18 +127,15 @@ public class AdminCPController extends BaseController {
 
                     Date tCreate = taskLog.getTimestampCreate();
                     taskLogData.put("timestamp_create", tCreate != null
-                            ? DateFormatUtils.toString(tCreate, DjsMasterConstants.DF_HHMMSS)
-                            : "[null]");
+                            ? DateFormatUtils.toString(tCreate, PngConstants.DF_HHMMSS) : "[null]");
 
                     Date tPickup = taskLog.getTimestampPickup();
                     taskLogData.put("timestamp_pickup", tPickup != null
-                            ? DateFormatUtils.toString(tPickup, DjsMasterConstants.DF_HHMMSS)
-                            : "[null]");
+                            ? DateFormatUtils.toString(tPickup, PngConstants.DF_HHMMSS) : "[null]");
 
                     Date tFinish = taskLog.getTimestampFinish();
                     taskLogData.put("timestamp_finish", tFinish != null
-                            ? DateFormatUtils.toString(tFinish, DjsMasterConstants.DF_HHMMSS)
-                            : "[null]");
+                            ? DateFormatUtils.toString(tFinish, PngConstants.DF_HHMMSS) : "[null]");
                 }
                 taskLogList.add(taskLogData);
                 counter++;
@@ -174,6 +175,138 @@ public class AdminCPController extends BaseController {
         } else {
             return redirect(controllers.routes.AdminCPController.home());
         }
+    }
+
+    /*----------------------------------------------------------------------*/
+    public final static String VIEW_APPLICATION_LIST = "app_list";
+
+    @AdminAuthRequired
+    public Result applicationList() throws Exception {
+        IAppDao appDao = getRegistry().getAppDao();
+        String[] appIdList = appDao.getAllAppIds();
+        List<AppBo> apps = new ArrayList<>();
+        for (String id : appIdList) {
+            AppBo app = appDao.getApp(id);
+            if (app != null) {
+                apps.add(app);
+            }
+        }
+        Html html = render(VIEW_APPLICATION_LIST, (Object) AppModel.newInstances(apps));
+        return ok(html);
+    }
+
+    public final static String VIEW_CREATE_APPLICATION = "create_app";
+
+    @AdminAuthRequired
+    public Result createApplication() throws Exception {
+        Form<FormCreateEditApplication> form = formFactory.form(FormCreateEditApplication.class)
+                .bind(FormCreateEditJobTemplate.defaultInstance.toMap());
+        form.discardErrors();
+        Html html = render(VIEW_CREATE_APPLICATION, form);
+        return ok(html);
+    }
+
+    @AdminAuthRequired
+    public Result createApplicationSubmit() throws Exception {
+        Form<FormCreateEditApplication> form = formFactory.form(FormCreateEditApplication.class)
+                .bindFromRequest();
+        if (form.hasErrors()) {
+            Html html = render(VIEW_CREATE_APPLICATION, form);
+            return ok(html);
+        }
+
+        FormCreateEditApplication model = form.get();
+        AppBo app = AppBo.newInstance();
+        // jobTemplate.setId(model.id).setDescription(model.description).setParams(model.params);
+        IAppDao appDao = registry.get().getAppDao();
+        // appDao.create(app);
+
+        flash(VIEW_APPLICATION_LIST, calcMessages().at("msg.app.create.done", app.getId()));
+
+        return redirect(routes.AdminCPController.applicationList());
+    }
+
+    public final static String VIEW_EDIT_APPLICATION = "edit_app";
+
+    @AdminAuthRequired
+    public Result editApplication(String id) throws Exception {
+        IAppDao appDao = registry.get().getAppDao();
+        AppBo app = appDao.getApp(id);
+        if (app == null) {
+            flash(VIEW_APPLICATION_LIST, PngConstants.FLASH_MSG_PREFIX_ERROR
+                    + calcMessages().at("error.app.not_found", id));
+
+            return redirect(routes.AdminCPController.applicationList());
+        }
+
+        Form<FormCreateEditApplication> form = formFactory.form(FormCreateEditApplication.class)
+                .bind(FormCreateEditApplication.newInstance(app).toMap());
+        form.discardErrors();
+        Html html = render(VIEW_EDIT_APPLICATION, form);
+        return ok(html);
+    }
+
+    @AdminAuthRequired
+    public Result editApplicationSubmit(String id) throws Exception {
+        IAppDao appDao = registry.get().getAppDao();
+        AppBo app = appDao.getApp(id);
+        if (app == null) {
+            flash(VIEW_APPLICATION_LIST, PngConstants.FLASH_MSG_PREFIX_ERROR
+                    + calcMessages().at("error.app.not_found", id));
+
+            return redirect(routes.AdminCPController.applicationList());
+        }
+
+        Form<FormCreateEditApplication> form = formFactory.form(FormCreateEditApplication.class)
+                .bindFromRequest();
+        if (form.hasErrors()) {
+            Html html = render(VIEW_EDIT_APPLICATION, form);
+            return ok(html);
+        }
+
+        FormCreateEditApplication model = form.get();
+        // app.setDescription(model.description).setParams(model.params);
+        appDao.update(app);
+
+        flash(VIEW_APPLICATION_LIST, calcMessages().at("msg.app.edit.done", app.getId()));
+
+        return redirect(routes.AdminCPController.applicationList());
+    }
+
+    public final static String VIEW_DELETE_APPLICATION = "delete_app";
+
+    @AdminAuthRequired
+    public Result deleteApplication(String id) throws Exception {
+        IAppDao appDao = registry.get().getAppDao();
+        AppBo app = appDao.getApp(id);
+        if (app == null) {
+            flash(VIEW_APPLICATION_LIST, PngConstants.FLASH_MSG_PREFIX_ERROR
+                    + calcMessages().at("error.app.not_found", id));
+
+            return redirect(routes.AdminCPController.applicationList());
+        }
+
+        AppModel model = AppModel.newInstance(app);
+        Html html = render(VIEW_DELETE_APPLICATION, model);
+        return ok(html);
+    }
+
+    @AdminAuthRequired
+    public Result deleteApplicationSubmit(String id) throws Exception {
+        IAppDao appDao = registry.get().getAppDao();
+        AppBo app = appDao.getApp(id);
+        if (app == null) {
+            flash(VIEW_APPLICATION_LIST, PngConstants.FLASH_MSG_PREFIX_ERROR
+                    + calcMessages().at("error.app.not_found", id));
+
+            return redirect(routes.AdminCPController.applicationList());
+        }
+
+        appDao.delete(app);
+
+        flash(VIEW_APPLICATION_LIST, calcMessages().at("msg.app.delete.done", app.getId()));
+
+        return redirect(routes.AdminCPController.applicationList());
     }
 
     /*----------------------------------------------------------------------*/
@@ -247,7 +380,7 @@ public class AdminCPController extends BaseController {
         IJobDao jobDao = registry.get().getJobDao();
         JobTemplateBo jobTemplate = jobDao.getJobTemplate(id);
         if (jobTemplate == null) {
-            flash(VIEW_JOB_TEMPLATE_LIST, DjsMasterConstants.FLASH_MSG_PREFIX_ERROR
+            flash(VIEW_JOB_TEMPLATE_LIST, PngConstants.FLASH_MSG_PREFIX_ERROR
                     + calcMessages().at("error.job_template.not_found", id));
 
             return redirect(routes.AdminCPController.jobTemplateList());
@@ -265,7 +398,7 @@ public class AdminCPController extends BaseController {
         IJobDao jobDao = registry.get().getJobDao();
         JobTemplateBo jobTemplate = jobDao.getJobTemplate(id);
         if (jobTemplate == null) {
-            flash(VIEW_JOB_TEMPLATE_LIST, DjsMasterConstants.FLASH_MSG_PREFIX_ERROR
+            flash(VIEW_JOB_TEMPLATE_LIST, PngConstants.FLASH_MSG_PREFIX_ERROR
                     + calcMessages().at("error.job_template.not_found", id));
 
             return redirect(routes.AdminCPController.jobTemplateList());
@@ -295,7 +428,7 @@ public class AdminCPController extends BaseController {
         IJobDao jobDao = registry.get().getJobDao();
         JobTemplateBo jobTemplate = jobDao.getJobTemplate(id);
         if (jobTemplate == null) {
-            flash(VIEW_JOB_TEMPLATE_LIST, DjsMasterConstants.FLASH_MSG_PREFIX_ERROR
+            flash(VIEW_JOB_TEMPLATE_LIST, PngConstants.FLASH_MSG_PREFIX_ERROR
                     + calcMessages().at("error.job_template.not_found", id));
 
             return redirect(routes.AdminCPController.jobTemplateList());
@@ -311,7 +444,7 @@ public class AdminCPController extends BaseController {
         IJobDao jobDao = registry.get().getJobDao();
         JobTemplateBo jobTemplate = jobDao.getJobTemplate(id);
         if (jobTemplate == null) {
-            flash(VIEW_JOB_TEMPLATE_LIST, DjsMasterConstants.FLASH_MSG_PREFIX_ERROR
+            flash(VIEW_JOB_TEMPLATE_LIST, PngConstants.FLASH_MSG_PREFIX_ERROR
                     + calcMessages().at("error.job_template.not_found", id));
 
             return redirect(routes.AdminCPController.jobTemplateList());
@@ -390,7 +523,7 @@ public class AdminCPController extends BaseController {
         IJobDao jobDao = registry.get().getJobDao();
         JobInfoBo jobInfo = jobDao.getJobInfo(id);
         if (jobInfo == null) {
-            flash(VIEW_JOB_LIST, DjsMasterConstants.FLASH_MSG_PREFIX_ERROR
+            flash(VIEW_JOB_LIST, PngConstants.FLASH_MSG_PREFIX_ERROR
                     + calcMessages().at("error.job_info.not_found", id));
 
             return redirect(routes.AdminCPController.jobList());
@@ -409,7 +542,7 @@ public class AdminCPController extends BaseController {
         IJobDao jobDao = registry.get().getJobDao();
         JobInfoBo jobInfo = jobDao.getJobInfo(id);
         if (jobInfo == null) {
-            flash(VIEW_JOB_LIST, DjsMasterConstants.FLASH_MSG_PREFIX_ERROR
+            flash(VIEW_JOB_LIST, PngConstants.FLASH_MSG_PREFIX_ERROR
                     + calcMessages().at("error.job_info.not_found", id));
 
             return redirect(routes.AdminCPController.jobList());
@@ -443,7 +576,7 @@ public class AdminCPController extends BaseController {
         IJobDao jobDao = registry.get().getJobDao();
         JobInfoBo jobInfo = jobDao.getJobInfo(id);
         if (jobInfo == null) {
-            flash(VIEW_JOB_LIST, DjsMasterConstants.FLASH_MSG_PREFIX_ERROR
+            flash(VIEW_JOB_LIST, PngConstants.FLASH_MSG_PREFIX_ERROR
                     + calcMessages().at("error.job_info.not_found", id));
 
             return redirect(routes.AdminCPController.jobList());
@@ -459,7 +592,7 @@ public class AdminCPController extends BaseController {
         IJobDao jobDao = registry.get().getJobDao();
         JobInfoBo jobInfo = jobDao.getJobInfo(id);
         if (jobInfo == null) {
-            flash(VIEW_JOB_LIST, DjsMasterConstants.FLASH_MSG_PREFIX_ERROR
+            flash(VIEW_JOB_LIST, PngConstants.FLASH_MSG_PREFIX_ERROR
                     + calcMessages().at("error.job_info.not_found", id));
 
             return redirect(routes.AdminCPController.jobList());

@@ -1,10 +1,10 @@
 @(flashMsg: String)
 @import utils._
 @if(flashMsg!=null && !flashMsg.equals("")){
-    @if(flashMsg.startsWith(DjsMasterConstants.FLASH_MSG_PREFIX_ERROR)){
+    @if(flashMsg.startsWith(PngConstants.FLASH_MSG_PREFIX_ERROR)){
         <div class="alert alert-dismissable alert-danger">
             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">x</button>
-            @defining(flashMsg.substring(DjsMasterConstants.FLASH_MSG_PREFIX_ERROR.length())){msg =>
+            @defining(flashMsg.substring(PngConstants.FLASH_MSG_PREFIX_ERROR.length())){msg =>
                 @Html(HtmlFormat.escape(msg).toString.replace("\n", "<br />"))
             }
         </div>

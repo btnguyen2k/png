@@ -14,8 +14,29 @@ msg.home = Home
 msg.dashboard = Dashboard
 
 msg.login_admincp = Login to AdminCP
-
 error.login.failed = Login failed: username and/or password do not match!
+
+msg.application = Application
+msg.applications = Applications
+
+msg.app.id = ID
+msg.app.api_key = API Key
+msg.app.ios_p12_file = iOS P12 File
+msg.app.ios_p12_password = iOS P12 File Password
+msg.app.existing_file = Existing file (upload new file to override)
+
+msg.app.create = Create Application
+msg.app.create.done = Application "{0}" has been created successfully.
+msg.app.edit = Edit Application
+msg.app.edit.done = Application "{0}" has been updated successfully.
+msg.app.delete = Delete Application
+msg.app.delete.done = Application "{0}" has been deleted successfully.
+
+error.app.empty_id = Error: Empty application id!
+error.app.exists = Error: Application "{0}" already existed!
+error.app.not_found = Error: Application "{0}" does not exist!
+
+
 
 msg.jobs = Jobs
 msg.job = Job

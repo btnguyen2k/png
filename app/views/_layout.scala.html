@@ -1,14 +1,15 @@
 @(active: String="", customJs: Array[String]=Array(), customCss: Array[String]=Array())(content: Html)(implicit messages: play.i18n.Messages)
 @import play.mvc._
 @import controllers.routes._
+@import utils._
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>AdminCP | DJS - Master</title>
+    <title>AdminCP | @PngGlobals.appConfig.getString("app.fullname")</title>
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
-    <meta name="author" content="DJS - Master" />
+    <meta name="author" content="@PngGlobals.appConfig.getString("app.fullname")" />
     
     <link rel="stylesheet" href="@Assets.versioned("AdminLTE-2.3.0/bootstrap/css/bootstrap.min.css")">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
@@ -32,33 +33,31 @@
         <header class="main-header">
 	        <a href="@routes.AdminCPController.home()" class="logo">
 		        <!-- mini logo for sidebar mini 50x50 pixels -->
-		        <span class="logo-mini"><b>DJS</b></span>
+		        <span class="logo-mini"><b>@PngGlobals.appConfig.getString("app.shortname")</b></span>
 		        <!-- logo for regular state and mobile devices -->
-		        <span class="logo-lg"><b>DJS</b> AdminCP</span>
+		        <span class="logo-lg"><b>@PngGlobals.appConfig.getString("app.shortname")</b> AdminCP</span>
 	        </a>
-	        
 	        <nav class="navbar navbar-static-top" role="navigation">
 	            <a href="#" class="sidebar-toggle" data-toggle="offcanvas" role="button">
 	                <span class="sr-only">Toggle navigation</span>
 	            </a>
-	            
 	            @_inc_nav_right_menu()
 	        </nav>
         </header>
-        
+
         @_inc_nav_left_menu(active)
-        
+
         <div class="content-wrapper">
             @content
         </div>
-        
+
         <footer class="main-footer">
             <div class="pull-right hidden-xs">
                 <b>Version</b> 2.3.0
             </div>
             <strong>Copyright &copy; 2014-2015 <a href="http://almsaeedstudio.com">Almsaeed Studio</a>.</strong> All rights reserved.
         </footer>
-        
+
         <aside class="control-sidebar control-sidebar-dark">
             <ul class="nav nav-tabs nav-justified control-sidebar-tabs">
                 <li><a href="#control-sidebar-home-tab" data-toggle="tab"><i class="fa fa-home"></i></a></li>

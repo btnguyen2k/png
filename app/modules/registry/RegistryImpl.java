@@ -7,6 +7,9 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.inject.Inject;
@@ -23,13 +26,14 @@ import com.github.ddth.queue.IQueue;
 
 import akka.actor.ActorSystem;
 import akka.cluster.Member;
+import bo.app.IAppDao;
 import bo.user.IUserDao;
 import play.Application;
 import play.Logger;
 import play.inject.ApplicationLifecycle;
 import queue.IQueueService;
-import utils.DjsMasterGlobals;
 import utils.NetworkUtils;
+import utils.PngGlobals;
 
 @Singleton
 public class RegistryImpl implements IRegistry {
@@ -45,22 +49,31 @@ public class RegistryImpl implements IRegistry {
     @Inject
     public RegistryImpl(ApplicationLifecycle lifecycle, Application playApp,
             ActorSystem actorSystem) {
-        DjsMasterGlobals.registry = this;
-        DjsMasterGlobals.appConfig = playApp.configuration();
-
+        PngGlobals.registry = this;
+        PngGlobals.appConfig = playApp.configuration();
         this.playApp = playApp;
         this.actorSystem = actorSystem;
+
+        // for Java pre-8
+        lifecycle.addStopHook(new Callable<CompletionStage<?>>() {
+            @Override
+            public CompletionStage<?> call() throws Exception {
+                destroy();
+                return CompletableFuture.completedFuture(null);
+            }
+        });
+
+        // //for Java 8+
+        // lifecycle.addStopHook(() -> {
+        // destroy();
+        // return CompletableFuture.completedFuture(null);
+        // });
 
         try {
             init();
         } catch (Exception e) {
             throw e instanceof RuntimeException ? (RuntimeException) e : new RuntimeException(e);
         }
-
-        lifecycle.addStopHook(() -> {
-            destroy();
-            return null;
-        });
     }
 
     private void initApplicationContext() {
@@ -105,6 +118,7 @@ public class RegistryImpl implements IRegistry {
     private void destroy() {
         destroyActors();
         destroyApplicationContext();
+        actorSystem = null;
     }
 
     /*----------------------------------------------------------------------*/
@@ -206,8 +220,16 @@ public class RegistryImpl implements IRegistry {
      * {@inheritDoc}
      */
     @Override
-    public ActorSystem getLocalActorSystem() {
+    public ActorSystem getActorSystem() {
         return actorSystem;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public IAppDao getAppDao() {
+        return appContext.getBean(IAppDao.class);
     }
 
     /**

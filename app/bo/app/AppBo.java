@@ -6,6 +6,8 @@ import com.github.ddth.djs.utils.DjsUtils;
 
 public class AppBo extends BaseBo {
 
+    public final static AppBo[] EMPTY_ARRAY = new AppBo[0];
+
     public final static AppBo newInstance() {
         AppBo user = new AppBo();
         return user;

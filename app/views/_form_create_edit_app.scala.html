@@ -1,0 +1,40 @@
+@(form: play.data.Form[forms.FormCreateEditApplication])(implicit messages: play.i18n.Messages)
+@import play.mvc._
+@import controllers.routes._
+@import utils._
+
+@if(form.hasErrors){
+    <div class="box-header">
+        @_macro_displayFormErrors(form, Array("id", "apiKey", "iOSP12Password", "iOSP12Size"))
+    </div>
+}
+<form role="form" method="post">
+    <input type="hidden" name="editId" value="@form("editId").value">
+    <div class="box-body">
+        <div class="form-group">
+            <label for="app_id">@messages.at("msg.app.id")</label>
+            <input @if(form("editId").value!=""){disabled="disabled"} type="text" class="form-control" id="app_id" name="id" value="@form("id").value" placeholder="@messages.at("msg.app.id")">
+        </div>
+        <div class="form-group">
+            <label for="app_api_key">@messages.at("msg.app.api_key")</label>
+            <input type="text" class="form-control" id="app_api_key" name="apiKey" value="@form("apiKey").value" placeholder="@messages.at("msg.app.api_key")">
+        </div>
+        <div class="form-group">
+            <label for="app_ios_p12_file">@messages.at("msg.app.ios_p12_file")</label>
+            <input type="file" accept=".p12" class="form-control" id="app_ios_p12_file" name="iOSP12File" placeholder="@messages.at("msg.app.ios_12_file")">
+            <p class="help-block">@messages.at("msg.app.existing_file"): @form("iOSP12Size").value byte(s)</p>
+        </div>
+        <div class="form-group">
+            <label for="app_ios_p12_password">@messages.at("msg.app.ios_p12_password")</label>
+            <input type="text" class="form-control" id="app_ios_p12_password" name="iOSP12Password" value="@form("iOSP12Password").value" placeholder="@messages.at("msg.app.ios_p12_password")">
+        </div>
+    </div>
+    
+    <div class="box-footer">
+        <button type="submit" class="btn btn-sm btn-primary"><i class="fa fa-save"> @messages.at("msg.save")</i></button>
+        <button type="reset" class="btn btn-sm btn-warning"><i class="fa fa-reply"> @messages.at("msg.reset")</i></button>
+        &nbsp;&nbsp;&nbsp;&nbsp;
+        <button type="button" class="btn btn-sm btn-default"
+            onclick="document.location.href='@routes.AdminCPController.applicationList()';"><i class="fa fa-close"> @messages.at("msg.cancel")</i></button>
+    </div>
+</form>

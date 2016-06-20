@@ -7,7 +7,7 @@ import com.github.ddth.commons.utils.DateFormatUtils;
 import com.github.ddth.djs.bo.job.JobInfoBo;
 
 import controllers.routes;
-import utils.DjsMasterConstants;
+import utils.PngConstants;
 
 public class JobInfoModel extends JobInfoBo {
     public static JobInfoModel newInstance(JobInfoBo bo) {
@@ -30,7 +30,7 @@ public class JobInfoModel extends JobInfoBo {
 
     public String getUpdateTimestampStr() {
         Date timestamp = getUpdateTimestamp();
-        return DateFormatUtils.toString(timestamp, DjsMasterConstants.DF_FULL);
+        return DateFormatUtils.toString(timestamp, PngConstants.DF_FULL);
     }
 
     public String urlEdit() {

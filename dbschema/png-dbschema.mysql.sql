@@ -1,8 +1,8 @@
 -- DB Schema - MySQL
 
 -- table to store user accounts
-DROP TABLE IF EXIST png_user;
-CREATE TABLE IF NOT EXISTS png_user (
+DROP TABLE IF EXISTS png_user;
+CREATE TABLE png_user (
     uid                 VARCHAR(32),
         PRIMARY KEY (uid),
     ugroup_id           INT,
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS png_user (
 
 -- table to store application info
 DROP TABLE IF EXISTS png_app;
-CREATE TABLE IF NOT EXISTS png_app (
+CREATE TABLE png_app (
     aid                 VARCHAR(32),
         PRIMARY KEY (aid),
     adisabled           TINYINT(4)                          NOT NULL DEFAULT 0,
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS png_app (
 
 -- table to store push tokens
 DROP TABLE IF EXISTS png_push_token;
-CREATE TABLE IF NOT EXISTS png_push_token (
+CREATE TABLE png_push_token (
     push_token          VARCHAR(128),
     push_os             VARCHAR(32),
         PRIMARY KEY (push_token, push_os),
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS png_push_token (
 
 -- table to store reverse indexing tag -> token
 DROP TABLE IF EXISTS png_tag_lookup;
-CREATE TABLE IF NOT EXISTS png_tag_lookup (
+CREATE TABLE png_tag_lookup (
     tag_value           VARCHAR(64),
     push_token          VARCHAR(128),
     push_os             VARCHAR(32),

@@ -10,7 +10,7 @@ import play.Configuration;
  * @author Thanh Nguyen <btnguyen2k@gmail.com>
  * @since 0.1.0
  */
-public class DjsMasterGlobals {
+public class PngGlobals {
     public static IRegistry registry;
 
     public static IFormValidator formValidator;

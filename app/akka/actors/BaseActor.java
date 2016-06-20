@@ -18,14 +18,16 @@ import play.Logger;
  * @author Thanh Nguyen <btnguyen2k@gmail.com>
  * @since 0.1.0
  */
-public abstract class BaseDjsActor extends UntypedActor {
+public abstract class BaseActor extends UntypedActor {
 
     private ActorRef distributedPubSubMediator = DistributedPubSub.get(getContext().system())
             .mediator();
+
     private Cluster cluster = Cluster.get(getContext().system());
+
     private IRegistry registry;
 
-    public BaseDjsActor(IRegistry registry) {
+    public BaseActor(IRegistry registry) {
         this.registry = registry;
     }
 

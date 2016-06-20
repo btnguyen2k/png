@@ -12,7 +12,7 @@ import com.github.ddth.djs.bo.job.JobInfoBo;
 import com.github.ddth.djs.utils.CronFormat;
 
 import play.data.validation.ValidationError;
-import utils.DjsMasterGlobals;
+import utils.PngGlobals;
 
 public class FormCreateEditJobInfo extends BaseForm {
 
@@ -168,7 +168,7 @@ public class FormCreateEditJobInfo extends BaseForm {
     }
 
     public List<ValidationError> validate() throws Exception {
-        return DjsMasterGlobals.formValidator.validate(this);
+        return PngGlobals.formValidator.validate(this);
     }
 
 }

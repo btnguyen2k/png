@@ -2,7 +2,9 @@ package controllers;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -39,8 +41,21 @@ import utils.JobUtils;
  */
 public class ApiController extends BaseController {
 
+    protected static Map<String, String> parseRequestHeaders() {
+        Map<String, String> result = new HashMap<String, String>();
+        Map<String, String[]> headers = request().headers();
+        if (headers != null) {
+            for (Entry<String, String[]> entry : headers.entrySet()) {
+                String key = entry.getKey();
+                String[] values = entry.getValue();
+                result.put(key, values != null & values.length > 0 ? values[0] : "");
+            }
+        }
+        return result;
+    }
+
     @SuppressWarnings("unchecked")
-    private Map<String, Object> parseRequest() throws IOException {
+    private Map<String, Object> parseRequestContent() throws IOException {
         RequestBody requestBody = request().body();
         String requestContent = null;
         JsonNode jsonNode = requestBody.asJson();
@@ -77,7 +92,7 @@ public class ApiController extends BaseController {
      */
     public Result apiPollTask() {
         try {
-            Map<String, Object> reqData = parseRequest();
+            Map<String, Object> reqData = parseRequestContent();
             if (reqData == null) {
                 return doResponseJson(DjsConstants.RESPONSE_CLIENT_ERROR, API_ERROR_CLIENT_ERROR);
             }
@@ -124,7 +139,7 @@ public class ApiController extends BaseController {
 
     public Result apiReturnTask() {
         try {
-            Map<String, Object> reqData = parseRequest();
+            Map<String, Object> reqData = parseRequestContent();
             if (reqData == null) {
                 return doResponseJson(DjsConstants.RESPONSE_CLIENT_ERROR, API_ERROR_CLIENT_ERROR);
             }
@@ -157,7 +172,7 @@ public class ApiController extends BaseController {
 
     public Result apiNotifyTaskPickup() {
         try {
-            Map<String, Object> reqData = parseRequest();
+            Map<String, Object> reqData = parseRequestContent();
             if (reqData == null) {
                 return doResponseJson(DjsConstants.RESPONSE_CLIENT_ERROR, API_ERROR_CLIENT_ERROR);
             }
@@ -190,7 +205,7 @@ public class ApiController extends BaseController {
 
     public Result apiNotifyTaskFinish() {
         try {
-            Map<String, Object> reqData = parseRequest();
+            Map<String, Object> reqData = parseRequestContent();
             if (reqData == null) {
                 return doResponseJson(DjsConstants.RESPONSE_CLIENT_ERROR, API_ERROR_CLIENT_ERROR);
             }

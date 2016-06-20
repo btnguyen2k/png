@@ -11,7 +11,7 @@ import scala.concurrent.duration.FiniteDuration;
  * @author Thanh Nguyen <btnguyen2k@gmail.com>
  * @since 0.1.0
  */
-public class DjsMasterConstants {
+public class PngConstants {
     public final static FiniteDuration DELAY_INITIAL = Duration.create(2, TimeUnit.SECONDS);
     public final static FiniteDuration DELAY_TICK = Duration.create(1, TimeUnit.SECONDS);
 

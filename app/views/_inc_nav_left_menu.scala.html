@@ -22,12 +22,20 @@
             </div>
         </form>
         *@
-        
+
         <ul class="sidebar-menu">
             <li @if(active=="home" || active=="dashboard"){class="active"}>
                 <a href="@routes.AdminCPController.home()"><i class="fa fa-dashboard"></i> @messages.at("msg.home")</a>
             </li>
 
+            <li @if(active=="app_list"){class="active"}>
+                <a href="@routes.AdminCPController.applicationList()">
+                    <i class="fa fa-building"></i> @messages.at("msg.applications")
+                    <span class="label @if(PngUtils.countApplications()>0){label-primary}else{label-grey} pull-right">@PngUtils.countApplications()</span>
+                </a>
+            </li>
+
+@*
             <li class="header" style="font-weight: bold">@messages.at("msg.jobs")</li>
 
             <li @if(active=="job_template_list"){class="active"}>
@@ -45,5 +53,6 @@
             
             <li class="header" style="font-weight: bold">@messages.at("msg.reports")</li>
         </ul>
+*@
     </section>
 </aside>

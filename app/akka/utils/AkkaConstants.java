@@ -3,8 +3,7 @@ package akka.utils;
 import com.github.ddth.djs.message.bus.TickMessage;
 import com.github.ddth.djs.message.queue.TaskFireoffMessage;
 
-import akka.actors.TickManagerActor;
-import utils.DjsMasterConstants;
+import utils.PngConstants;
 
 public class AkkaConstants {
     /**
@@ -13,7 +12,7 @@ public class AkkaConstants {
      * <ul>
      * <li>keep track of cluster nodes ("tick" and "master" nodes)</li>
      * <li>- leader "master" node fires {@link TickMessage} per tick (see
-     * {@link DjsMasterConstants#DELAY_TICK})</li>
+     * {@link PngConstants#DELAY_TICK})</li>
      * </ul>
      */
     public final static String ROLE_MASTER = "master";

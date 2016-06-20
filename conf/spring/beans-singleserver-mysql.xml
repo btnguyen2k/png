@@ -56,6 +56,12 @@
 		<property name="dataSource" ref="DATASOURCE" />
 	</bean>
 
+	<bean id="DAO_PUSHTOKEN" class="bo.pushtoken.jdbc.JdbcPushTokenDao"
+		scope="singleton" init-method="init" destroy-method="destroy">
+		<property name="cacheFactory" ref="CACHE_FACTORY" />
+		<property name="dataSource" ref="DATASOURCE" />
+	</bean>
+
 	<bean id="DAO_USER" class="bo.user.jdbc.JdbcUserDao" scope="singleton"
 		init-method="init" destroy-method="destroy">
 		<property name="cacheFactory" ref="CACHE_FACTORY" />

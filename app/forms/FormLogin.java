@@ -4,7 +4,7 @@ import java.util.List;
 
 import bo.user.UserBo;
 import play.data.validation.ValidationError;
-import utils.DjsMasterGlobals;
+import utils.PngGlobals;
 
 public class FormLogin extends BaseForm {
 
@@ -28,7 +28,7 @@ public class FormLogin extends BaseForm {
     }
 
     public List<ValidationError> validate() throws Exception {
-        return DjsMasterGlobals.formValidator.validate(this);
+        return PngGlobals.formValidator.validate(this);
     }
 
 }

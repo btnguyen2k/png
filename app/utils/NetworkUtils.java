@@ -30,7 +30,7 @@ public class NetworkUtils {
         ServerSocket ss = null;
         try {
             ss = new ServerSocket(port);
-            ss.setReuseAddress(true);
+            // ss.setReuseAddress(true);
             return true;
         } catch (IOException e) {
         } finally {

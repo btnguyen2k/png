@@ -7,7 +7,7 @@ import java.util.Map;
 import com.github.ddth.djs.bo.job.JobTemplateBo;
 
 import play.data.validation.ValidationError;
-import utils.DjsMasterGlobals;
+import utils.PngGlobals;
 
 public class FormCreateEditJobTemplate extends BaseForm {
 
@@ -67,7 +67,7 @@ public class FormCreateEditJobTemplate extends BaseForm {
     }
 
     public List<ValidationError> validate() throws Exception {
-        return DjsMasterGlobals.formValidator.validate(this);
+        return PngGlobals.formValidator.validate(this);
     }
 
 }

@@ -12,6 +12,14 @@ POST    /cp/login                               controllers.AdminCPController.lo
 GET     /cp                                     controllers.AdminCPController.index()
 GET     /cp/home                                controllers.AdminCPController.home()
 
+GET     /cp/appList                             controllers.AdminCPController.applicationList()
+GET     /cp/createApp                           controllers.AdminCPController.createApplication()
+POST    /cp/createApp                           controllers.AdminCPController.createApplicationSubmit()
+GET     /cp/editApp                             controllers.AdminCPController.editApplication(id: String)
+POST    /cp/editApp                             controllers.AdminCPController.editApplicationSubmit(id: String)
+GET     /cp/deleteApp                           controllers.AdminCPController.deleteApplication(id: String)
+POST    /cp/deleteApp                           controllers.AdminCPController.deleteApplicationSubmit(id: String)
+
 GET     /cp/jobTemplateList                     controllers.AdminCPController.jobTemplateList()
 GET     /cp/createJobTemplate                   controllers.AdminCPController.createJobTemplate()
 POST    /cp/createJobTemplate                   controllers.AdminCPController.createJobTemplateSubmit()

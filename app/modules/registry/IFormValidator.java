@@ -2,6 +2,7 @@ package modules.registry;
 
 import java.util.List;
 
+import forms.FormCreateEditApplication;
 import forms.FormCreateEditJobInfo;
 import forms.FormCreateEditJobTemplate;
 import forms.FormLogin;
@@ -15,6 +16,14 @@ public interface IFormValidator {
      * @return
      */
     public List<ValidationError> validate(FormLogin form);
+
+    /**
+     * Validates a {@link FormCreateEditApplication} form.
+     * 
+     * @param form
+     * @return
+     */
+    public List<ValidationError> validate(FormCreateEditApplication form);
 
     /**
      * Validates a {@link FormCreateEditJobTemplate} form.

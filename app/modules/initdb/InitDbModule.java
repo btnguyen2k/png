@@ -2,7 +2,11 @@ package modules.initdb;
 
 import javax.inject.Inject;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.google.inject.Provider;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 
 import bo.user.IUserDao;
 import bo.user.UserBo;
@@ -12,7 +16,7 @@ import play.api.Environment;
 import play.api.inject.Binding;
 import play.api.inject.Module;
 import scala.collection.Seq;
-import utils.DjsMasterConstants;
+import utils.PngConstants;
 import utils.UserUtils;
 
 public class InitDbModule extends Module {
@@ -23,12 +27,22 @@ public class InitDbModule extends Module {
             IUserDao userDao = registry.get().getUserDao();
             UserBo admin = userDao.getUser("1");
             if (admin == null) {
-                String username = "admin";
+                Config conf = ConfigFactory.load().getConfig("init");
                 String id = "1";
-                String encPwd = UserUtils.encryptPassword(id, "password");
-                String email = "admin@localhost";
-                admin = UserBo.newInstance(username, encPwd, email).setId(id)
-                        .setGroupId(DjsMasterConstants.GROUP_ADMIN);
+                String username = conf != null ? conf.getString("user.name") : null;
+                if (StringUtils.isBlank(username)) {
+                    username = "admin";
+                }
+                String password = conf != null ? conf.getString("user.password") : null;
+                if (StringUtils.isBlank(password)) {
+                    password = "password";
+                }
+                String email = conf != null ? conf.getString("user.email") : null;
+                if (StringUtils.isBlank(email)) {
+                    password = "admin@localhost";
+                }
+                admin = UserBo.newInstance(username, UserUtils.encryptPassword(id, password), email)
+                        .setId(id).setGroupId(PngConstants.GROUP_ADMIN);
                 userDao.create(admin);
             }
         }

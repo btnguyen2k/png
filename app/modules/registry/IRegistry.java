@@ -6,6 +6,7 @@ import com.github.ddth.queue.IQueue;
 
 import akka.actor.ActorSystem;
 import akka.cluster.Member;
+import bo.app.IAppDao;
 import bo.user.IUserDao;
 import play.Application;
 import queue.IQueueService;
@@ -22,11 +23,11 @@ public interface IRegistry {
     public Application getPlayApplication();
 
     /**
-     * Gets the local {@link ActorSystem} instance.
+     * Gets the {@link ActorSystem} instance.
      * 
      * @return
      */
-    public ActorSystem getLocalActorSystem();
+    public ActorSystem getActorSystem();
 
     /*----------------------------------------------------------------------*/
 
@@ -69,6 +70,12 @@ public interface IRegistry {
     public Member getLeader(String role);
 
     /*----------------------------------------------------------------------*/
+    /**
+     * Gets {@link IAppDao} instance.
+     * 
+     * @return
+     */
+    public IAppDao getAppDao();
 
     /**
      * Gets {@link IJobDao} instance.

@@ -17,11 +17,12 @@ import com.github.ddth.djs.bo.job.IJobDao;
 import com.github.ddth.djs.utils.CronFormat;
 
 import bo.user.IUserDao;
+import forms.FormCreateEditApplication;
 import forms.FormCreateEditJobInfo;
 import forms.FormCreateEditJobTemplate;
 import forms.FormLogin;
 import play.data.validation.ValidationError;
-import utils.DjsMasterGlobals;
+import utils.PngGlobals;
 import utils.UserUtils;
 
 @Singleton
@@ -31,7 +32,7 @@ public class FormValidatorImpl implements IFormValidator {
 
     @Inject
     public FormValidatorImpl(Provider<IRegistry> registry) {
-        DjsMasterGlobals.formValidator = this;
+        PngGlobals.formValidator = this;
 
         this.registry = registry;
     }
@@ -59,6 +60,15 @@ public class FormValidatorImpl implements IFormValidator {
             return errors;
         }
 
+        return errors.isEmpty() ? null : errors;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<ValidationError> validate(FormCreateEditApplication form) {
+        List<ValidationError> errors = new ArrayList<ValidationError>();
         return errors.isEmpty() ? null : errors;
     }
 

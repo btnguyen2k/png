@@ -7,7 +7,7 @@ import com.github.ddth.commons.utils.DateFormatUtils;
 import com.github.ddth.djs.bo.log.TaskLogBo;
 
 import controllers.routes;
-import utils.DjsMasterConstants;
+import utils.PngConstants;
 
 public class TaskLogModel extends TaskLogBo {
     public static TaskLogModel newInstance(TaskLogBo bo) {
@@ -30,19 +30,19 @@ public class TaskLogModel extends TaskLogBo {
 
     public String getTimestampCreateStr() {
         Date timestamp = getTimestampCreate();
-        return timestamp != null ? DateFormatUtils.toString(timestamp, DjsMasterConstants.DF_HHMMSS)
+        return timestamp != null ? DateFormatUtils.toString(timestamp, PngConstants.DF_HHMMSS)
                 : "[null]";
     }
 
     public String getTimestampPickupStr() {
         Date timestamp = getTimestampPickup();
-        return timestamp != null ? DateFormatUtils.toString(timestamp, DjsMasterConstants.DF_HHMMSS)
+        return timestamp != null ? DateFormatUtils.toString(timestamp, PngConstants.DF_HHMMSS)
                 : "[null]";
     }
 
     public String getTimestampFinishStr() {
         Date timestamp = getTimestampFinish();
-        return timestamp != null ? DateFormatUtils.toString(timestamp, DjsMasterConstants.DF_HHMMSS)
+        return timestamp != null ? DateFormatUtils.toString(timestamp, PngConstants.DF_HHMMSS)
                 : "[null]";
     }
 

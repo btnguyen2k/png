@@ -40,6 +40,8 @@ libraryDependencies ++= Seq(
     "com.typesafe.akka"         %% "akka-cluster"               % _akkaVersion,
     "com.typesafe.akka"         %% "akka-cluster-metrics"       % _akkaVersion,
     "com.typesafe.akka"         %% "akka-cluster-tools"         % _akkaVersion,
+    
+    "org.slf4j"                 %  "log4j-over-slf4j"           % "1.7.21",
 
     // DB for metadata: MySQL or PostgreSQL
     // DB connection pool: HikariCP or DBCP2

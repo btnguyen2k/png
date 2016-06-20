@@ -52,7 +52,7 @@ public class JobUtils {
      * @return
      */
     public static int countJobTemplates() {
-        return DjsMasterGlobals.registry.getJobDao().getAllJobTemplateIds().length;
+        return PngGlobals.registry.getJobDao().getAllJobTemplateIds().length;
     }
 
     /**
@@ -61,7 +61,7 @@ public class JobUtils {
      * @return
      */
     public static int countJobs() {
-        return DjsMasterGlobals.registry.getJobDao().getAllJobInfoIds().length;
+        return PngGlobals.registry.getJobDao().getAllJobInfoIds().length;
     }
 
     /**
@@ -70,7 +70,7 @@ public class JobUtils {
      * @return
      */
     public static JobTemplateBo[] getAllJobTemplates() {
-        IJobDao jobDao = DjsMasterGlobals.registry.getJobDao();
+        IJobDao jobDao = PngGlobals.registry.getJobDao();
         String[] idList = jobDao.getAllJobTemplateIds();
         List<JobTemplateBo> result = new ArrayList<>();
         for (String id : idList) {
@@ -88,7 +88,7 @@ public class JobUtils {
      * @return
      */
     public static JobInfoBo[] getAllJobs() {
-        IJobDao jobDao = DjsMasterGlobals.registry.getJobDao();
+        IJobDao jobDao = PngGlobals.registry.getJobDao();
         String[] idList = jobDao.getAllJobInfoIds();
         List<JobInfoBo> result = new ArrayList<>();
         for (String id : idList) {
