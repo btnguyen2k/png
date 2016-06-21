@@ -20,31 +20,5 @@ POST    /cp/editApp                             controllers.AdminCPController.ed
 GET     /cp/deleteApp                           controllers.AdminCPController.deleteApplication(id: String)
 POST    /cp/deleteApp                           controllers.AdminCPController.deleteApplicationSubmit(id: String)
 
-GET     /cp/jobTemplateList                     controllers.AdminCPController.jobTemplateList()
-GET     /cp/createJobTemplate                   controllers.AdminCPController.createJobTemplate()
-POST    /cp/createJobTemplate                   controllers.AdminCPController.createJobTemplateSubmit()
-GET     /cp/editJobTemplate                     controllers.AdminCPController.editJobTemplate(id: String)
-POST    /cp/editJobTemplate                     controllers.AdminCPController.editJobTemplateSubmit(id: String)
-GET     /cp/deleteJobTemplate                   controllers.AdminCPController.deleteJobTemplate(id: String)
-POST    /cp/deleteJobTemplate                   controllers.AdminCPController.deleteJobTemplateSubmit(id: String)
-
-GET     /cp/jobList                             controllers.AdminCPController.jobList()
-GET     /cp/createJob                           controllers.AdminCPController.createJob()
-POST    /cp/createJob                           controllers.AdminCPController.createJobSubmit()
-GET     /cp/editJob                             controllers.AdminCPController.editJob(id: String)
-POST    /cp/editJob                             controllers.AdminCPController.editJobSubmit(id: String)
-GET     /cp/deleteJob                           controllers.AdminCPController.deleteJob(id: String)
-POST    /cp/deleteJob                           controllers.AdminCPController.deleteJobSubmit(id: String)
-POST    /cp/apiStartJob                         controllers.AdminCPController.apiStartJob()
-POST    /cp/apiStopJob                          controllers.AdminCPController.apiStopJob()
-
-POST    /api/pollTask                           controllers.ApiController.apiPollTask()
-POST    /api/returnTask                         controllers.ApiController.apiReturnTask()
-POST    /api/notifyTaskPickup                   controllers.ApiController.apiNotifyTaskPickup()
-POST    /api/notifyTaskFinish                   controllers.ApiController.apiNotifyTaskFinish()
-
-GET     /cp/ajax/latestTaskLogsByCategories     controllers.AdminCPController.ajajxLatestTaskLogsByCategories()
-GET     /cp/ajax/ajaxLatestTaskLogs             controllers.AdminCPController.ajaxLatestTaskLogs(numRecords: Integer?=100)
-
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file                           controllers.Assets.versioned(path="/public", file: Asset)
