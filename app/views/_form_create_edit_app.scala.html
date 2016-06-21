@@ -5,18 +5,23 @@
 
 @if(form.hasErrors){
     <div class="box-header">
-        @_macro_displayFormErrors(form, Array("id", "apiKey", "iOSP12Password", "iOSP12Size"))
+        @_macro_displayFormErrors(form, Array("id", "apiKey", "iOSP12Password", "iOSP12File"))
     </div>
 }
-<form role="form" method="post">
+<form role="form" method="post" enctype="multipart/form-data">
     <input type="hidden" name="editId" value="@form("editId").value">
     <div class="box-body">
+        <div class="checkbox">
+            <label>
+                <input type="checkbox" name="isDisabled" value="1" @if("1"==form("isDisabled").value){checked="checked"}> @Messages("msg.app.is_disabled")
+            </label>
+        </div>
         <div class="form-group">
             <label for="app_id">@messages.at("msg.app.id")</label>
             <input @if(form("editId").value!=""){disabled="disabled"} type="text" class="form-control" id="app_id" name="id" value="@form("id").value" placeholder="@messages.at("msg.app.id")">
         </div>
         <div class="form-group">
-            <label for="app_api_key">@messages.at("msg.app.api_key")</label>
+            <label for="app_api_key">@messages.at("msg.app.api_key") (<a href="javascript:;" onclick="generateRandomApiKey()">random</a>)</label>
             <input type="text" class="form-control" id="app_api_key" name="apiKey" value="@form("apiKey").value" placeholder="@messages.at("msg.app.api_key")">
         </div>
         <div class="form-group">
@@ -38,3 +43,18 @@
             onclick="document.location.href='@routes.AdminCPController.applicationList()';"><i class="fa fa-close"> @messages.at("msg.cancel")</i></button>
     </div>
 </form>
+<script type="text/javascript">
+function generateRandomApiKey() {
+	var rStr = randomString(32, "0123456789abcdefghijklmnopqrstuvwxyz");
+	$("#app_api_key").val(rStr);
+}
+
+/*
+ * Credit: http://stackoverflow.com/questions/10726909/random-alpha-numeric-string-in-javascript
+ */
+function randomString(length, chars) {
+    var result = '';
+    for (var i = length; i > 0; --i) result += chars[Math.floor(Math.random() * chars.length)];
+    return result;
+}
+</script>

@@ -62,8 +62,8 @@ public class JdbcAppDao extends BaseJdbcDao implements IAppDao {
             putToCache(cacheNameApp, cacheKey(app), app);
         } else {
             removeFromCache(cacheNameApp, cacheKeyAppId(app.getId()));
-            removeFromCache(cacheNameApp, cacheKeyAllApps());
         }
+        removeFromCache(cacheNameApp, cacheKeyAllApps());
     }
     /*----------------------------------------------------------------------*/
 
@@ -97,11 +97,9 @@ public class JdbcAppDao extends BaseJdbcDao implements IAppDao {
     private String SQL_GET_ALL_APP_IDS = "SELECT " + AppBoMapper.COL_ID + " FROM {0} ORDER BY "
             + AppBoMapper.COL_ID;
     private String SQL_UPDATE_APP = "UPDATE {0} SET "
-            + StringUtils.join(
-                    new String[] { AppBoMapper.COL_DISABLED + "=?", AppBoMapper.COL_DISABLED + "=?",
-                            AppBoMapper.COL_API_KEY + "=?", AppBoMapper.COL_IOS_P12_CONTENT + "=?",
-                            AppBoMapper.COL_IOS_P12_PASSWORD + "=?" },
-                    ',')
+            + StringUtils.join(new String[] { AppBoMapper.COL_DISABLED + "=?",
+                    AppBoMapper.COL_API_KEY + "=?", AppBoMapper.COL_IOS_P12_CONTENT + "=?",
+                    AppBoMapper.COL_IOS_P12_PASSWORD + "=?" }, ',')
             + " WHERE " + AppBoMapper.COL_ID + "=?";
 
     /**

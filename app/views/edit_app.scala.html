@@ -1,0 +1,25 @@
+@(form: play.data.Form[forms.FormCreateEditApplication])(implicit messages: play.i18n.Messages)
+@import play.mvc._
+@import utils._
+@_layout(
+    active    = "app_list"
+){
+<section class="content-header">
+    <h1>@messages.at("msg.app.edit")</h1>
+    <ol class="breadcrumb">
+        <li><a href="@routes.AdminCPController.home()"><i class="fa fa-dashboard"></i> @messages.at("msg.home")</a></li>
+        <li><a href="@routes.AdminCPController.applicationList()"><i class="fa fa-building"></i> @messages.at("msg.applications")</a></li>
+        <li class="active">@messages.at("msg.app.edit")</li>
+    </ol>
+</section>
+            
+<section class="content">
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box box-primary">
+                @_form_create_edit_app(form)
+            </div>
+        </div>
+    </div>
+</section>
+}

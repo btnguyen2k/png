@@ -27,6 +27,7 @@ public class FormCreateEditApplication extends BaseForm {
     public int isDisabled = 0, iOSP12Size = 0;
     public String id = "", apiKey = "", iOSP12Password = "";
     public String editId = "";
+    public byte[] iOSP12Content = null;
 
     public Map<String, String> toMap() {
         Map<String, String> data = new HashMap<String, String>();

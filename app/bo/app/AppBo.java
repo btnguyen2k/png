@@ -2,7 +2,8 @@ package bo.app;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.ddth.dao.BaseBo;
-import com.github.ddth.djs.utils.DjsUtils;
+
+import utils.PngUtils;
 
 public class AppBo extends BaseBo {
 
@@ -39,8 +40,8 @@ public class AppBo extends BaseBo {
 
     @JsonIgnore
     public boolean isDisabled() {
-        Boolean value = getAttribute(ATTR_IS_DISABLED, Boolean.class);
-        return value != null ? value.booleanValue() : false;
+        Integer value = getAttribute(ATTR_IS_DISABLED, Integer.class);
+        return value != null ? value.intValue() > 0 : false;
     }
 
     public AppBo setDisabled(int value) {
@@ -68,6 +69,9 @@ public class AppBo extends BaseBo {
 
     @JsonIgnore
     public byte[] getIOSP12ContentRaw() {
+        if (iOSP12ContentRaw == null) {
+            iOSP12ContentRaw = PngUtils.base64Decode(getIOSP12Content());
+        }
         return iOSP12ContentRaw;
     }
 
@@ -79,12 +83,12 @@ public class AppBo extends BaseBo {
     public AppBo setIOSP12Content(String iOSP12Content) {
         String content = iOSP12Content != null ? iOSP12Content.trim() : "";
         setAttribute(ATTR_IOS_P12_CONTENT, content);
-        iOSP12ContentRaw = DjsUtils.base64Decode(content);
+        iOSP12ContentRaw = PngUtils.base64Decode(content);
         return this;
     }
 
     public AppBo setIOSP12Content(byte[] iOSP12ContentRaw) {
-        String content = DjsUtils.base64Encode(iOSP12ContentRaw);
+        String content = PngUtils.base64Encode(iOSP12ContentRaw);
         this.iOSP12ContentRaw = iOSP12ContentRaw;
         setAttribute(ATTR_IOS_P12_CONTENT, content);
         return this;

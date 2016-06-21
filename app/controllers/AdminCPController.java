@@ -217,9 +217,13 @@ public class AdminCPController extends BaseController {
 
         FormCreateEditApplication model = form.get();
         AppBo app = AppBo.newInstance();
-        // jobTemplate.setId(model.id).setDescription(model.description).setParams(model.params);
+        app.setId(model.id).setApiKey(model.apiKey).setIOSP12Password(model.iOSP12Password);
+        app.setDisabled(model.isDisabled);
+        if (model.iOSP12Content != null) {
+            app.setIOSP12Content(model.iOSP12Content);
+        }
         IAppDao appDao = registry.get().getAppDao();
-        // appDao.create(app);
+        appDao.create(app);
 
         flash(VIEW_APPLICATION_LIST, calcMessages().at("msg.app.create.done", app.getId()));
 
@@ -265,7 +269,11 @@ public class AdminCPController extends BaseController {
         }
 
         FormCreateEditApplication model = form.get();
-        // app.setDescription(model.description).setParams(model.params);
+        app.setApiKey(model.apiKey).setIOSP12Password(model.iOSP12Password);
+        app.setDisabled(model.isDisabled);
+        if (model.iOSP12Content != null) {
+            app.setIOSP12Content(model.iOSP12Content);
+        }
         appDao.update(app);
 
         flash(VIEW_APPLICATION_LIST, calcMessages().at("msg.app.edit.done", app.getId()));

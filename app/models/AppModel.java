@@ -1,14 +1,9 @@
 package models;
 
-import java.util.Date;
 import java.util.List;
-
-import com.github.ddth.commons.utils.DateFormatUtils;
-import com.github.ddth.djs.bo.job.JobTemplateBo;
 
 import bo.app.AppBo;
 import controllers.routes;
-import utils.PngConstants;
 
 public class AppModel extends AppBo {
     public static AppModel newInstance(AppBo bo) {
@@ -27,6 +22,11 @@ public class AppModel extends AppBo {
 
     public static AppModel[] newInstances(List<AppBo> boList) {
         return newInstances(boList.toArray(AppBo.EMPTY_ARRAY));
+    }
+
+    public long getIOSP12FileSize() {
+        byte[] data = getIOSP12ContentRaw();
+        return data != null ? data.length : 0;
     }
 
     public String urlEdit() {

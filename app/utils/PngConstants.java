@@ -23,4 +23,6 @@ public class PngConstants {
     public final static String DF_HHMMSS = "HH:mm:ss";
 
     public final static String GROUP_ID_MASTER = "djs_master";
+
+    public final static long MAX_IOS_P12_FILE_SIZE = 32000;
 }

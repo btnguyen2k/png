@@ -36,28 +36,26 @@
                     <table class="table table-bordered table-condensed table-striped table-hover" id="tbl_apps">
                         <thead>
                             <tr>
-                                <th style="text-align: center; vertical-align: middle;">@messages.at("msg.job_template.id")</th>
-                                <th style="text-align: center; vertical-align: middle;">@messages.at("msg.job_template.desc")</th>
-                                <th style="text-align: center; vertical-align: middle;">@messages.at("msg.job_template.update_timestamp")</th>
+                                <th style="text-align: center; vertical-align: middle;">&nbsp;</th>
+                                <th style="text-align: center; vertical-align: middle;">@messages.at("msg.app.id")</th>
+                                <th style="text-align: center; vertical-align: middle;">@messages.at("msg.app.api_key")</th>
+                                <th style="text-align: center; vertical-align: middle;">@messages.at("msg.app.ios_p12_file")</th>
                                 <th style="text-align: center; vertical-align: middle;">@messages.at("msg.actions")</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @*
-                            @for(jobT <- jobTemplateList){
+                            @for(app <- appList){
                                 <tr>
-                                    <td style="text-align: center; vertical-align: middle;">@jobT.getId()</td>
-                                    <td style="vertical-align: middle;" class="col-xs-7">
-                                        @jobT.getDescription()
-                                    </td>
-                                    <td style="text-align: center; vertical-align: middle;">@jobT.getUpdateTimestampStr()</td>
+                                    <td style="text-align: center; vertical-align: middle;"><i class="fa fa-check" style="color:@if(app.isDisabled()){grey}else{green}"></i></td>
+                                    <td style="text-align: center; vertical-align: middle;">@app.getId()</td>
+                                    <td style="text-align: center; vertical-align: middle;">@app.getApiKey()</td>
+                                    <td style="text-align: center; vertical-align: middle;">@app.getIOSP12FileSize() byte(s)</td>
                                     <td style="text-align: center; vertical-align: middle; font-size: x-large;" class="text-nowrap">
-                                        <a href="@jobT.urlEdit()" title="@messages.at("msg.edit")" style="color:green;" class="fa fa-edit"></a>
-                                        <a href="@jobT.urlDelete()" title="@messages.at("msg.delete")" style="color:red;" class="fa fa-remove"></a>
+                                        <a href="@app.urlEdit()" title="@messages.at("msg.edit")" style="color:green;" class="fa fa-edit"></a>
+                                        <a href="@app.urlDelete()" title="@messages.at("msg.delete")" style="color:red;" class="fa fa-remove"></a>
                                     </td>
                                 </tr>
                             }
-                            *@
                         </tbody>
                     </table>
                 </div>
