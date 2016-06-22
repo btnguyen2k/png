@@ -3,6 +3,7 @@ package bo.app.jdbc;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.jdbc.core.RowMapper;
 
 import bo.app.AppBo;
@@ -16,6 +17,33 @@ public class AppBoMapper implements RowMapper<AppBo> {
     public final static String COL_API_KEY = "api_key";
     public final static String COL_IOS_P12_CONTENT = "ios_p12_content";
     public final static String COL_IOS_P12_PASSWORD = "ios_p12_password";
+
+    public final static String[] _COLS_ALL = { COL_ID, COL_DISABLED, COL_API_KEY,
+            COL_IOS_P12_CONTENT, COL_IOS_P12_PASSWORD };
+    public final static String[] _COLS_CREATE = _COLS_ALL;
+    public final static String[] _COLS_KEY = { COL_ID };
+    public final static String _COLS_KEY_WHERE_CLAUSE = COL_ID + "=?";
+    public final static String _COLS_UPDATE_CLAUSE = StringUtils
+            .join(new String[] { COL_DISABLED + "=?", COL_API_KEY + "=?",
+                    COL_IOS_P12_CONTENT + "=?", COL_IOS_P12_PASSWORD + "=?" }, ',');
+
+    public static Object[] valuesForCreate(AppBo bo) {
+        return new Object[] { bo.getId(), bo.isDisabled() ? 1 : 0, bo.getApiKey(),
+                bo.getIOSP12Content(), bo.getIOSP12Password() };
+    }
+
+    public static Object[] valuesForDelete(AppBo bo) {
+        return new Object[] { bo.getId() };
+    }
+
+    public static Object[] valuesForSelect(String id) {
+        return new Object[] { id };
+    }
+
+    public static Object[] valuesForUpdate(AppBo bo) {
+        return new Object[] { bo.isDisabled() ? 1 : 0, bo.getApiKey(), bo.getIOSP12Content(),
+                bo.getIOSP12Password(), bo.getId() };
+    }
 
     /**
      * {@inheritDoc}

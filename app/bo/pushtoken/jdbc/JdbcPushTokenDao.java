@@ -125,23 +125,16 @@ public class JdbcPushTokenDao extends BaseJdbcDao implements IPushTokenDao {
 
     /*----------------------------------------------------------------------*/
 
-    private final static String[] COLS_PUSHTOKEN_ALL = { PushTokenBoMapper.COL_TOKEN,
-            PushTokenBoMapper.COL_OS, PushTokenBoMapper.COL_TIMESTAMP_UPDATE,
-            PushTokenBoMapper.COL_TAGS, PushTokenBoMapper.COL_TAGS_CHECKSUM };
-    private final static String[] COLS_PUSHTOKEN_CREATE = COLS_PUSHTOKEN_ALL;
     private String SQL_CREATE_PUSHTOKEN = "INSERT INTO {0} ("
-            + StringUtils.join(COLS_PUSHTOKEN_CREATE, ',') + ") VALUES ("
-            + StringUtils.repeat("?", ",", COLS_PUSHTOKEN_CREATE.length) + ")";
-    private String SQL_DELETE_PUSHTOKEN = "DELETE FROM {0} WHERE " + PushTokenBoMapper.COL_TOKEN
-            + "=? AND " + PushTokenBoMapper.COL_OS + "=?";
-    private String SQL_GET_PUSHTOKEN = "SELECT " + StringUtils.join(COLS_PUSHTOKEN_ALL, ',')
-            + " FROM {0} WHERE " + PushTokenBoMapper.COL_TOKEN + "=? AND "
-            + PushTokenBoMapper.COL_OS + "=?";
-    private String SQL_UPDATE_PUSHTOKEN = "UPDATE {0} SET "
-            + StringUtils.join(new String[] { PushTokenBoMapper.COL_TIMESTAMP_UPDATE + "=?",
-                    PushTokenBoMapper.COL_TAGS + "=?", PushTokenBoMapper.COL_TAGS_CHECKSUM + "=?" },
-                    ',')
-            + " WHERE " + PushTokenBoMapper.COL_TOKEN + "=? AND " + PushTokenBoMapper.COL_OS + "=?";
+            + StringUtils.join(PushTokenBoMapper._COLS_CREATE, ',') + ") VALUES ("
+            + StringUtils.repeat("?", ",", PushTokenBoMapper._COLS_CREATE.length) + ")";
+    private String SQL_DELETE_PUSHTOKEN = "DELETE FROM {0} WHERE "
+            + PushTokenBoMapper._COLS_KEY_WHERE_CLAUSE;
+    private String SQL_GET_PUSHTOKEN = "SELECT "
+            + StringUtils.join(PushTokenBoMapper._COLS_ALL, ',') + " FROM {0} WHERE "
+            + PushTokenBoMapper._COLS_KEY_WHERE_CLAUSE;
+    private String SQL_UPDATE_PUSHTOKEN = "UPDATE {0} SET " + PushTokenBoMapper._COLS_UPDATE_CLAUSE
+            + " WHERE " + PushTokenBoMapper._COLS_KEY_WHERE_CLAUSE;
 
     private final static String[] COLS_TAGLOOKUP_ALL = { TagLookupBoMapper.COL_TAG,
             TagLookupBoMapper.COL_TOKEN, TagLookupBoMapper.COL_OS };
@@ -156,11 +149,10 @@ public class JdbcPushTokenDao extends BaseJdbcDao implements IPushTokenDao {
         PushTokenBo pushToken = PushTokenBo.newInstance(_pushToken);
         Date TIMESTAMP = pushToken.getTimestampUpdate() != null ? pushToken.getTimestampUpdate()
                 : new Date();
-        final Object[] VALUES = new Object[] { pushToken.getToken(), pushToken.getOs(), TIMESTAMP,
-                pushToken.getTags(), pushToken.getTagsChecksum() };
+        pushToken.setTimestampUpdate(TIMESTAMP);
         try {
-            int numRows = execute(SQL_CREATE_PUSHTOKEN, VALUES);
-            pushToken.setTimestampUpdate(TIMESTAMP);
+            int numRows = execute(SQL_CREATE_PUSHTOKEN,
+                    PushTokenBoMapper.valuesForCreate(pushToken));
             invalidate(pushToken, true);
             invalidateLookupTags(pushToken.getTagsAsList());
             return numRows > 0;
@@ -174,9 +166,9 @@ public class JdbcPushTokenDao extends BaseJdbcDao implements IPushTokenDao {
      */
     @Override
     public boolean delete(PushTokenBo pushToken) {
-        final Object[] VALUES = new Object[] { pushToken.getToken(), pushToken.getOs() };
         try {
-            int numRows = execute(SQL_DELETE_PUSHTOKEN, VALUES);
+            int numRows = execute(SQL_DELETE_PUSHTOKEN,
+                    PushTokenBoMapper.valuesForDelete(pushToken));
             invalidate(pushToken, false);
             invalidateLookupTags(pushToken.getTagsAsList());
             return numRows > 0;
@@ -190,7 +182,8 @@ public class JdbcPushTokenDao extends BaseJdbcDao implements IPushTokenDao {
      */
     @Override
     public boolean update(PushTokenBo _pushToken) {
-        PushTokenBo existing = getPushToken(_pushToken.getToken(), _pushToken.getOs());
+        PushTokenBo existing = getPushToken(_pushToken.getAppId(), _pushToken.getToken(),
+                _pushToken.getOs());
         if (existing == null) {
             return false;
         }
@@ -198,10 +191,10 @@ public class JdbcPushTokenDao extends BaseJdbcDao implements IPushTokenDao {
         PushTokenBo pushToken = PushTokenBo.newInstance(_pushToken);
         Date TIMESTAMP = pushToken.getTimestampUpdate() != null ? pushToken.getTimestampUpdate()
                 : new Date();
-        final Object[] PARAMS = new Object[] { TIMESTAMP, pushToken.getTags(),
-                pushToken.getTagsChecksum(), pushToken.getToken(), pushToken.getOs() };
+        pushToken.setTimestampUpdate(TIMESTAMP);
         try {
-            int nunRows = execute(SQL_UPDATE_PUSHTOKEN, PARAMS);
+            int nunRows = execute(SQL_UPDATE_PUSHTOKEN,
+                    PushTokenBoMapper.valuesForUpdate(pushToken));
             pushToken.setTimestampUpdate(TIMESTAMP);
             invalidate(pushToken, true);
             if (!StringUtils.equals(existing.getTagsChecksum(), pushToken.getTagsChecksum())) {
@@ -218,17 +211,16 @@ public class JdbcPushTokenDao extends BaseJdbcDao implements IPushTokenDao {
      * {@inheritDoc}
      */
     @Override
-    public PushTokenBo getPushToken(String token, String os) {
-        if (StringUtils.isBlank(token) || StringUtils.isBlank(os)) {
+    public PushTokenBo getPushToken(String appId, String token, String os) {
+        if (StringUtils.isBlank(appId) || StringUtils.isBlank(token) || StringUtils.isBlank(os)) {
             return null;
         }
         final String cacheKey = cacheKeyPushToken(token, os);
         PushTokenBo result = getFromCache(cacheNamePushToken, cacheKey, PushTokenBo.class);
         if (result == null) {
-            final Object[] WHERE_VALUES = new Object[] { token, os };
             try {
                 List<PushTokenBo> dbRows = executeSelect(PushTokenBoMapper.instance,
-                        SQL_GET_PUSHTOKEN, WHERE_VALUES);
+                        SQL_GET_PUSHTOKEN, PushTokenBoMapper.valuesForSelect(appId, token, os));
                 result = dbRows != null && dbRows.size() > 0 ? dbRows.get(0) : null;
                 putToCache(cacheNamePushToken, cacheKey, result);
             } catch (SQLException e) {
@@ -260,7 +252,7 @@ public class JdbcPushTokenDao extends BaseJdbcDao implements IPushTokenDao {
         List<PushTokenBo> result = new ArrayList<>();
         if (lookupResult != null) {
             for (TagLookupBo bo : lookupResult) {
-                PushTokenBo pushToken = getPushToken(bo.getToken(), bo.getOs());
+                PushTokenBo pushToken = getPushToken(bo.getAppId(), bo.getToken(), bo.getOs());
                 if (pushToken != null) {
                     result.add(pushToken);
                 }

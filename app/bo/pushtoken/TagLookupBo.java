@@ -10,17 +10,28 @@ public class TagLookupBo extends BaseBo {
         return bo;
     }
 
-    public final static TagLookupBo newInstance(String tag, String token, String os) {
+    public final static TagLookupBo newInstance(String appId, String tag, String token, String os) {
         TagLookupBo bo = newInstance();
-        bo.setTag(tag).setToken(token).setOs(os);
+        bo.setAppId(appId).setTag(tag).setToken(token).setOs(os);
         return bo;
     }
 
     /*----------------------------------------------------------------------*/
 
+    private final static String ATTR_APP_ID = "app_id";
     private final static String ATTR_TAG = "tag";
     private final static String ATTR_TOKEN = "token";
     private final static String ATTR_OS = "os";
+
+    @JsonIgnore
+    public String getAppId() {
+        return getAttribute(ATTR_APP_ID, String.class);
+    }
+
+    public TagLookupBo setAppId(String appId) {
+        setAttribute(ATTR_APP_ID, appId != null ? appId.trim().toLowerCase() : "");
+        return this;
+    }
 
     @JsonIgnore
     public String getTag() {

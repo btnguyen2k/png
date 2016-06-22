@@ -85,32 +85,24 @@ public class JdbcAppDao extends BaseJdbcDao implements IAppDao {
 
     /*----------------------------------------------------------------------*/
 
-    private final static String[] COLS_APP_ALL = { AppBoMapper.COL_ID, AppBoMapper.COL_DISABLED,
-            AppBoMapper.COL_API_KEY, AppBoMapper.COL_IOS_P12_CONTENT,
-            AppBoMapper.COL_IOS_P12_PASSWORD };
-    private final static String[] COLS_APP_CREATE = COLS_APP_ALL;
-    private String SQL_CREATE_APP = "INSERT INTO {0} (" + StringUtils.join(COLS_APP_CREATE, ',')
-            + ") VALUES (" + StringUtils.repeat("?", ",", COLS_APP_CREATE.length) + ")";
-    private String SQL_DELETE_APP = "DELETE FROM {0} WHERE " + AppBoMapper.COL_ID + "=?";
-    private String SQL_GET_APP = "SELECT " + StringUtils.join(COLS_APP_ALL, ',')
-            + " FROM {0} WHERE " + AppBoMapper.COL_ID + "=?";
+    private String SQL_CREATE_APP = "INSERT INTO {0} ("
+            + StringUtils.join(AppBoMapper._COLS_CREATE, ',') + ") VALUES ("
+            + StringUtils.repeat("?", ",", AppBoMapper._COLS_CREATE.length) + ")";
+    private String SQL_DELETE_APP = "DELETE FROM {0} WHERE " + AppBoMapper._COLS_KEY_WHERE_CLAUSE;
+    private String SQL_GET_APP = "SELECT " + StringUtils.join(AppBoMapper._COLS_ALL, ',')
+            + " FROM {0} WHERE " + AppBoMapper._COLS_KEY_WHERE_CLAUSE;
     private String SQL_GET_ALL_APP_IDS = "SELECT " + AppBoMapper.COL_ID + " FROM {0} ORDER BY "
             + AppBoMapper.COL_ID;
-    private String SQL_UPDATE_APP = "UPDATE {0} SET "
-            + StringUtils.join(new String[] { AppBoMapper.COL_DISABLED + "=?",
-                    AppBoMapper.COL_API_KEY + "=?", AppBoMapper.COL_IOS_P12_CONTENT + "=?",
-                    AppBoMapper.COL_IOS_P12_PASSWORD + "=?" }, ',')
-            + " WHERE " + AppBoMapper.COL_ID + "=?";
+    private String SQL_UPDATE_APP = "UPDATE {0} SET " + AppBoMapper._COLS_UPDATE_CLAUSE + " WHERE "
+            + AppBoMapper._COLS_KEY_WHERE_CLAUSE;
 
     /**
      * {@inheritDoc}
      */
     @Override
     public boolean create(AppBo app) {
-        final Object[] VALUES = new Object[] { app.getId(), app.isDisabled() ? 1 : 0,
-                app.getApiKey(), app.getIOSP12Content(), app.getIOSP12Password() };
         try {
-            int numRows = execute(SQL_CREATE_APP, VALUES);
+            int numRows = execute(SQL_CREATE_APP, AppBoMapper.valuesForCreate(app));
             invalidate(app, true);
             return numRows > 0;
         } catch (SQLException e) {
@@ -123,9 +115,8 @@ public class JdbcAppDao extends BaseJdbcDao implements IAppDao {
      */
     @Override
     public boolean delete(AppBo app) {
-        final Object[] VALUES = new Object[] { app.getId() };
         try {
-            int numRows = execute(SQL_DELETE_APP, VALUES);
+            int numRows = execute(SQL_DELETE_APP, AppBoMapper.valuesForDelete(app));
             invalidate(app, false);
             return numRows > 0;
         } catch (SQLException e) {
@@ -138,10 +129,8 @@ public class JdbcAppDao extends BaseJdbcDao implements IAppDao {
      */
     @Override
     public boolean update(AppBo app) {
-        final Object[] PARAM_VALUES = new Object[] { app.isDisabled() ? 1 : 0, app.getApiKey(),
-                app.getIOSP12Content(), app.getIOSP12Password(), app.getId() };
         try {
-            int nunRows = execute(SQL_UPDATE_APP, PARAM_VALUES);
+            int nunRows = execute(SQL_UPDATE_APP, AppBoMapper.valuesForUpdate(app));
             invalidate(app, true);
             return nunRows > 0;
         } catch (SQLException e) {
@@ -160,9 +149,9 @@ public class JdbcAppDao extends BaseJdbcDao implements IAppDao {
         final String cacheKey = cacheKeyAppId(id);
         AppBo result = getFromCache(cacheNameApp, cacheKey, AppBo.class);
         if (result == null) {
-            final Object[] WHERE_VALUES = new Object[] { id };
             try {
-                List<AppBo> dbRows = executeSelect(AppBoMapper.instance, SQL_GET_APP, WHERE_VALUES);
+                List<AppBo> dbRows = executeSelect(AppBoMapper.instance, SQL_GET_APP,
+                        AppBoMapper.valuesForSelect(id));
                 result = dbRows != null && dbRows.size() > 0 ? dbRows.get(0) : null;
                 putToCache(cacheNameApp, cacheKey, result);
             } catch (SQLException e) {

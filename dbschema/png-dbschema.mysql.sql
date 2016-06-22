@@ -20,7 +20,7 @@ CREATE TABLE png_user (
 -- table to store application info
 DROP TABLE IF EXISTS png_app;
 CREATE TABLE png_app (
-    aid                 VARCHAR(32),
+    aid                 VARCHAR(64),
         PRIMARY KEY (aid),
     adisabled           TINYINT(4)                          NOT NULL DEFAULT 0,
     api_key             VARCHAR(255),
@@ -32,9 +32,10 @@ CREATE TABLE png_app (
 -- table to store push tokens
 DROP TABLE IF EXISTS png_push_token;
 CREATE TABLE png_push_token (
+    app_id              VARCHAR(64),
     push_token          VARCHAR(128),
     push_os             VARCHAR(32),
-        PRIMARY KEY (push_token, push_os),
+        PRIMARY KEY (app_id, push_token, push_os),
     timestamp_update    DATETIME,
     tags                TEXT,
     tags_checksum       VARCHAR(64)
@@ -45,7 +46,8 @@ CREATE TABLE png_push_token (
 DROP TABLE IF EXISTS png_tag_lookup;
 CREATE TABLE png_tag_lookup (
     tag_value           VARCHAR(64),
+    app_id              VARCHAR(64),
     push_token          VARCHAR(128),
     push_os             VARCHAR(32),
-        PRIMARY KEY (tag_value, push_token, push_os)
+        PRIMARY KEY (tag_value, app_id, push_token, push_os)
 ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;

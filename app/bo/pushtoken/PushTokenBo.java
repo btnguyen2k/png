@@ -23,9 +23,9 @@ public class PushTokenBo extends BaseBo {
         return bo;
     }
 
-    public final static PushTokenBo newInstance(String token, String os) {
+    public final static PushTokenBo newInstance(String appId, String token, String os) {
         PushTokenBo bo = newInstance();
-        bo.setToken(token).setOs(os);
+        bo.setAppId(appId).setToken(token).setOs(os);
         return bo;
     }
 
@@ -47,11 +47,22 @@ public class PushTokenBo extends BaseBo {
         return false;
     }
 
+    private final static String ATTR_APP_ID = "app_id";
     private final static String ATTR_TOKEN = "token";
     private final static String ATTR_OS = "os";
     private final static String ATTR_TIMESTAMP_UPDATE = "timestamp";
     private final static String ATTR_TAGS = "tags";
     private final static String ATTR_TAGS_CHECKSUM = "tags_checksum";
+
+    @JsonIgnore
+    public String getAppId() {
+        return getAttribute(ATTR_APP_ID, String.class);
+    }
+
+    public PushTokenBo setAppId(String appId) {
+        setAttribute(ATTR_APP_ID, appId != null ? appId.trim().toLowerCase() : null);
+        return this;
+    }
 
     @JsonIgnore
     public String getToken() {

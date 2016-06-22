@@ -34,11 +34,12 @@ public interface IPushTokenDao {
     /**
      * Fetches an existing push token.
      * 
+     * @param appId
      * @param token
      * @param os
      * @return
      */
-    public PushTokenBo getPushToken(String token, String os);
+    public PushTokenBo getPushToken(String appId, String token, String os);
 
     /**
      * Looks up push tokens by tags.
