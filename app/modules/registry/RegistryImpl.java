@@ -20,13 +20,12 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 
-import com.github.ddth.djs.bo.job.IJobDao;
-import com.github.ddth.djs.bo.log.ITaskLogDao;
 import com.github.ddth.queue.IQueue;
 
 import akka.actor.ActorSystem;
 import akka.cluster.Member;
 import bo.app.IAppDao;
+import bo.pushtoken.IPushTokenDao;
 import bo.user.IUserDao;
 import play.Application;
 import play.Logger;
@@ -236,16 +235,8 @@ public class RegistryImpl implements IRegistry {
      * {@inheritDoc}
      */
     @Override
-    public IJobDao getJobDao() {
-        return appContext.getBean(IJobDao.class);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ITaskLogDao getTaskLogDao() {
-        return appContext.getBean(ITaskLogDao.class);
+    public IPushTokenDao getPushTokenDao() {
+        return appContext.getBean(IPushTokenDao.class);
     }
 
     /**

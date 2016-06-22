@@ -3,11 +3,8 @@ package controllers;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.github.ddth.djs.message.BaseMessage;
-
 import akka.actor.ActorRef;
 import akka.cluster.pubsub.DistributedPubSub;
-import akka.cluster.pubsub.DistributedPubSubMediator;
 import bo.app.AppBo;
 import bo.app.IAppDao;
 import compositions.AdminAuthRequired;
@@ -46,10 +43,10 @@ public class AdminCPController extends BaseController {
         return ok(getDistributedPubSubMediator().toString());
     }
 
-    protected void broadcastEventMessage(String topic, BaseMessage msg) {
-        getDistributedPubSubMediator()
-                .tell(new DistributedPubSubMediator.Publish(topic, msg, false), null);
-    }
+    // protected void broadcastEventMessage(String topic, BaseMessage msg) {
+    // getDistributedPubSubMediator()
+    // .tell(new DistributedPubSubMediator.Publish(topic, msg, false), null);
+    // }
 
     /*----------------------------------------------------------------------*/
 

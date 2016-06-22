@@ -1,12 +1,11 @@
 package modules.registry;
 
-import com.github.ddth.djs.bo.job.IJobDao;
-import com.github.ddth.djs.bo.log.ITaskLogDao;
 import com.github.ddth.queue.IQueue;
 
 import akka.actor.ActorSystem;
 import akka.cluster.Member;
 import bo.app.IAppDao;
+import bo.pushtoken.IPushTokenDao;
 import bo.user.IUserDao;
 import play.Application;
 import queue.IQueueService;
@@ -78,18 +77,11 @@ public interface IRegistry {
     public IAppDao getAppDao();
 
     /**
-     * Gets {@link IJobDao} instance.
+     * Gets {@link IPushTokenDao} instance.
      * 
      * @return
      */
-    public IJobDao getJobDao();
-
-    /**
-     * Gets {@link ITaskLogDao} instance.
-     * 
-     * @return
-     */
-    public ITaskLogDao getTaskLogDao();
+    public IPushTokenDao getPushTokenDao();
 
     /**
      * Gets {@link IUserDao} instance.

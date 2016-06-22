@@ -1,8 +1,5 @@
 package akka.utils;
 
-import com.github.ddth.djs.message.bus.TickMessage;
-import com.github.ddth.djs.message.queue.TaskFireoffMessage;
-
 import utils.PngConstants;
 
 public class AkkaConstants {

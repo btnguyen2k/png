@@ -61,12 +61,9 @@ libraryDependencies ++= Seq(
 
     "com.github.ddth"           %  "ddth-commons-core"          % _ddthCommons,
     "com.github.ddth"           %  "ddth-commons-serialization" % _ddthCommons,
-    "com.github.ddth"           %  "ddth-commons-thrift"        % _ddthCommons,
 
     // queue system: Kafka
     "com.github.ddth"           %  "ddth-kafka"                 % "1.2.1",
     "com.github.ddth"           %  "ddth-queue-core"            % _ddthQueueVersion,
-    "com.github.ddth"           %  "ddth-queue-kafka"           % _ddthQueueVersion,
-
-    "com.github.ddth"           %  "djs-commons"                % "0.1.3.13.1-SNAPSHOT"
+    "com.github.ddth"           %  "ddth-queue-kafka"           % _ddthQueueVersion
 )
