@@ -2,6 +2,7 @@ package controllers;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -183,8 +184,14 @@ public class ApiController extends BaseController {
 
             IPushTokenDao pushTokenDao = getRegistry().getPushTokenDao();
             PushTokenBo pushToken = pushTokenDao.getPushToken(appId, token, os);
-            if (pushToken == null) {
-                return doResponseJson(PngConstants.RESPONSE_NOT_FOUND, "Push token not found!");
+            if (pushToken != null) {
+                Map<String, Object> data = new HashMap<>();
+                data.put("app_id", pushToken.getAppId());
+                data.put("token", pushToken.getToken());
+                data.put("timestamp", pushToken.getTimestampUpdate());
+                data.put("tags", pushToken.getTagsAsList());
+                data.put("os", pushToken.getOs());
+                return doResponseJson(PngConstants.RESPONSE_OK, "Successful", data);
             } else {
                 return doResponseJson(PngConstants.RESPONSE_NOT_FOUND, "Push token not found!");
             }
