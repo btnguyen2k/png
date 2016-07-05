@@ -37,6 +37,16 @@ public class PushTokenBo extends BaseBo {
 
     /*----------------------------------------------------------------------*/
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public PushTokenBo clone() {
+        PushTokenBo clone = (PushTokenBo) super.clone();
+        clone.tagsAsSet = null;
+        return clone;
+    }
+
     public boolean equals(Object obj) {
         if (obj instanceof PushTokenBo) {
             PushTokenBo another = (PushTokenBo) obj;
@@ -97,24 +107,27 @@ public class PushTokenBo extends BaseBo {
     @JsonIgnore
     private Set<String> tagsAsSet;
 
-    public String[] getTagsAsList() {
-        synchronized (this) {
-            if (tagsAsSet == null) {
+    @SuppressWarnings("unchecked")
+    synchronized private Set<String> getTagsSet() {
+        if (tagsAsSet == null) {
+            try {
+                tagsAsSet = SerializationUtils.fromJsonString(getTags(), Set.class);
+            } catch (Exception e) {
                 tagsAsSet = new TreeSet<>();
             }
-            return tagsAsSet.toArray(ArrayUtils.EMPTY_STRING_ARRAY);
         }
+        return tagsAsSet;
+    }
+
+    public String[] getTagsAsList() {
+        return getTagsSet().toArray(ArrayUtils.EMPTY_STRING_ARRAY);
     }
 
     public PushTokenBo addTag(String tag) {
-        synchronized (this) {
-            if (tagsAsSet == null) {
-                tagsAsSet = new TreeSet<>();
-            }
-            if (!StringUtils.isBlank(tag)) {
-                if (tagsAsSet.add(tag.trim().toLowerCase())) {
-                    setTags(SerializationUtils.toJsonString(tagsAsSet), false);
-                }
+        if (!StringUtils.isBlank(tag)) {
+            Set<String> tags = getTagsSet();
+            if (tags.add(tag.trim().toLowerCase())) {
+                setTags(SerializationUtils.toJsonString(tags), false);
             }
         }
         return this;
@@ -130,16 +143,14 @@ public class PushTokenBo extends BaseBo {
     }
 
     @SuppressWarnings("unchecked")
-    public PushTokenBo setTags(String tags, boolean updateTagsSet) {
-        synchronized (this) {
-            setAttribute(ATTR_TAGS, tags != null ? tags.trim().toLowerCase() : "[]");
-            setTagsChecksum(HashUtils.crc32(tags));
-            if (updateTagsSet) {
-                try {
-                    tagsAsSet = SerializationUtils.fromJsonString(tags, Set.class);
-                } catch (Exception e) {
-                    tagsAsSet = new TreeSet<>();
-                }
+    synchronized public PushTokenBo setTags(String tags, boolean updateTagsSet) {
+        setAttribute(ATTR_TAGS, tags != null ? tags.trim().toLowerCase() : "[]");
+        setTagsChecksum(HashUtils.crc32(tags));
+        if (updateTagsSet) {
+            try {
+                tagsAsSet = SerializationUtils.fromJsonString(tags, Set.class);
+            } catch (Exception e) {
+                tagsAsSet = new TreeSet<>();
             }
         }
         return this;

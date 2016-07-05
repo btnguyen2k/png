@@ -1,9 +1,9 @@
 package controllers;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -11,16 +11,18 @@ import org.apache.commons.lang3.StringUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.ddth.commons.utils.DPathUtils;
 import com.github.ddth.commons.utils.SerializationUtils;
+import com.github.ddth.queue.IQueue;
 
 import akka.util.ByteString;
-import bo.app.AppBo;
-import bo.app.IAppDao;
 import bo.pushtoken.IPushTokenDao;
 import bo.pushtoken.PushTokenBo;
+import compositions.ApiAuthRequired;
+import play.Logger;
 import play.mvc.Http.RawBuffer;
 import play.mvc.Http.RequestBody;
 import play.mvc.Result;
 import utils.PngConstants;
+import utils.PngUtils;
 
 /**
  * Controller that handles API requests.
@@ -30,77 +32,163 @@ import utils.PngConstants;
  */
 public class ApiController extends BaseController {
 
-    protected static Map<String, String> parseRequestHeaders() {
-        Map<String, String> result = new HashMap<String, String>();
-        Map<String, String[]> headers = request().headers();
-        if (headers != null) {
-            for (Entry<String, String[]> entry : headers.entrySet()) {
-                String key = entry.getKey();
-                String[] values = entry.getValue();
-                result.put(key, values != null & values.length > 0 ? values[0] : "");
-            }
-        }
-        return result;
-    }
-
     @SuppressWarnings("unchecked")
     private Map<String, Object> parseRequestContent() throws IOException {
-        RequestBody requestBody = request().body();
-        String requestContent = null;
-        JsonNode jsonNode = requestBody.asJson();
-        if (jsonNode != null) {
-            requestContent = jsonNode.toString();
-        } else {
-            RawBuffer rawBuffer = requestBody.asRaw();
-            if (rawBuffer != null) {
-                ByteString buffer = rawBuffer.asBytes();
-                if (buffer != null) {
-                    requestContent = buffer.toString();
-                } else {
-                    byte[] buff = FileUtils.readFileToByteArray(rawBuffer.asFile());
-                    requestContent = buff != null ? new String(buff, PngConstants.UTF8) : "";
-                }
+        try {
+            RequestBody requestBody = request().body();
+            String requestContent = null;
+            JsonNode jsonNode = requestBody.asJson();
+            if (jsonNode != null) {
+                requestContent = jsonNode.toString();
             } else {
-                requestContent = requestBody.asText();
+                RawBuffer rawBuffer = requestBody.asRaw();
+                if (rawBuffer != null) {
+                    ByteString buffer = rawBuffer.asBytes();
+                    if (buffer != null) {
+                        requestContent = buffer.toString();
+                    } else {
+                        byte[] buff = FileUtils.readFileToByteArray(rawBuffer.asFile());
+                        requestContent = buff != null ? new String(buff, PngConstants.UTF8) : "";
+                    }
+                } else {
+                    requestContent = requestBody.asText();
+                }
             }
+            return SerializationUtils.fromJsonString(requestContent, Map.class);
+        } catch (Exception e) {
+            Logger.warn("Error while parsing request params: " + e.getMessage(), e);
+            return null;
         }
-        return SerializationUtils.fromJsonString(requestContent, Map.class);
     }
 
-    private final static String HEADER_API_KEY = "api_key";
-    private final static String HEADER_APP_ID = "app_id";
-    private final static String PARAM_TOKEN = "token";
-    private final static String PARAM_OS = "os";
-    private final static String PARAM_TAGS = "tags";
+    public final static String HEADER_API_KEY = "api_key";
+    public final static String HEADER_APP_ID = "app_id";
+    public final static String PARAM_TOKEN = "token";
+    public final static String PARAM_OS = "os";
+    public final static String PARAM_TAGS = "tags";
 
-    private boolean validateRequest(String appId, String apiKey) {
-        IAppDao appDao = getRegistry().getAppDao();
-        AppBo app = appDao.getApp(appId);
-        return app != null && !app.isDisabled() && StringUtils.equals(app.getApiKey(), apiKey);
-    }
+    private final static String API_ERROR_MISSING_TOKEN = "Parameter [" + PARAM_TOKEN
+            + "] is missing or invalid!";
+    private final static String API_ERROR_MISSING_OS = "Parameter [" + PARAM_OS
+            + "] is missing or invalid!";
+    private final static String API_ERROR_INVALID_TAGS = "Parameter [" + PARAM_TAGS
+            + "] is invalid!";
 
     /**
      * Adds/Updates a push notification token.
      * 
+     * <p>
+     * Params:
+     * <ul>
+     * <li>{@code token}: (required) String, push notification token.</li>
+     * <li>{@code os}: (required) String, OS name/identifier.</li>
+     * <li>{@code tags}: (optional) String or array of Strings.</li>
+     * </ul>
+     * </p>
+     * 
      * @return
      */
+    @ApiAuthRequired
     public Result apiAddToken() {
         try {
-            Map<String, String> reqHeaders = parseRequestHeaders();
+            Map<String, String> reqHeaders = PngUtils.parseRequestHeaders(request(), HEADER_APP_ID);
             String appId = reqHeaders.get(HEADER_APP_ID);
-            String apiKey = reqHeaders.get(HEADER_API_KEY);
-            if (!validateRequest(appId, apiKey)) {
-                return doResponseJson(PngConstants.RESPONSE_ACCESS_DENIED, "App [" + appId
-                        + "] not found or has been disabled, or API key does not match!");
+
+            Map<String, Object> reqParams = parseRequestContent();
+
+            String token = DPathUtils.getValue(reqParams, PARAM_TOKEN, String.class);
+            if (StringUtils.isBlank(token)) {
+                return doResponseJson(PngConstants.RESPONSE_CLIENT_ERROR, API_ERROR_MISSING_TOKEN);
             }
+
+            String os = DPathUtils.getValue(reqParams, PARAM_OS, String.class);
+            if (StringUtils.isBlank(os)) {
+                return doResponseJson(PngConstants.RESPONSE_CLIENT_ERROR, API_ERROR_MISSING_OS);
+            }
+
+            List<String> tags = new ArrayList<>();
+            {
+                Object tagsObj = DPathUtils.getValue(reqParams, PARAM_TAGS);
+                if (tagsObj instanceof List) {
+                    tagsObj = ((List<?>) tagsObj).toArray();
+                }
+                if (tagsObj instanceof String[]) {
+                    for (String tag : (String[]) tagsObj) {
+                        tags.add(tag);
+                    }
+                } else if (tagsObj instanceof Object[]) {
+                    for (Object tag : (Object[]) tagsObj) {
+                        tags.add(tag.toString());
+                    }
+                } else if (tagsObj instanceof String) {
+                    String[] tokens = ((String) tagsObj).split("[,;\\s]+");
+                    for (String tag : tokens) {
+                        tags.add(tag);
+                    }
+                } else if (tagsObj != null) {
+                    if (StringUtils.isBlank(os)) {
+                        return doResponseJson(PngConstants.RESPONSE_CLIENT_ERROR,
+                                API_ERROR_INVALID_TAGS);
+                    }
+                }
+            }
+
+            if (Logger.isDebugEnabled()) {
+                String clientIp = PngUtils.getClientIp(request());
+                Logger.debug("Request [" + request().uri() + "] from [" + clientIp + "], params: "
+                        + reqParams);
+            }
+
+            IQueue queue = getRegistry().getQueueAppEvents();
+            if (PngUtils.queuePushTokenUpdate(queue, appId, token, os, tags)) {
+                return doResponseJson(PngConstants.RESPONSE_OK, "true", true);
+            } else {
+                Logger.warn("Cannot put push-token-update message to queue.");
+                return doResponseJson(PngConstants.RESPONSE_OK, "false", false);
+            }
+        } catch (Exception e) {
+            return doResponseJson(PngConstants.RESPONSE_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    /**
+     * Fetches an existing push notification token.
+     * 
+     * <p>
+     * Params:
+     * <ul>
+     * <li>{@code token}: (required) String, push notification token.</li>
+     * <li>{@code os}: (required) String, OS name/identifier.</li>
+     * </ul>
+     * </p>
+     * 
+     * @return
+     */
+    @ApiAuthRequired
+    public Result apiGetToken() {
+        try {
+            Map<String, String> reqHeaders = PngUtils.parseRequestHeaders(request(), HEADER_APP_ID);
+            String appId = reqHeaders.get(HEADER_APP_ID);
 
             Map<String, Object> reqParams = parseRequestContent();
             String token = DPathUtils.getValue(reqParams, PARAM_TOKEN, String.class);
+            if (StringUtils.isBlank(token)) {
+                return doResponseJson(PngConstants.RESPONSE_CLIENT_ERROR, API_ERROR_MISSING_TOKEN);
+            }
+
+            String os = DPathUtils.getValue(reqParams, PARAM_OS, String.class);
+            if (StringUtils.isBlank(os)) {
+                return doResponseJson(PngConstants.RESPONSE_CLIENT_ERROR, API_ERROR_MISSING_OS);
+            }
 
             IPushTokenDao pushTokenDao = getRegistry().getPushTokenDao();
-            // PushTokenBo pushToken = pushTokenDao.getPushToken(appId, token,
-            // os);
-            return ok();
+            PushTokenBo pushToken = pushTokenDao.getPushToken(appId, token, os);
+            if (pushToken == null) {
+                return doResponseJson(PngConstants.RESPONSE_NOT_FOUND, "Push token not found!");
+            } else {
+                return doResponseJson(PngConstants.RESPONSE_NOT_FOUND, "Push token not found!");
+            }
+
         } catch (Exception e) {
             return doResponseJson(PngConstants.RESPONSE_SERVER_ERROR, e.getMessage());
         }

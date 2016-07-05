@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.dao.DuplicateKeyException;
 
 import com.github.ddth.dao.jdbc.BaseJdbcDao;
 
@@ -84,25 +85,17 @@ public class JdbcPushTokenDao extends BaseJdbcDao implements IPushTokenDao {
         }
     }
 
-    private void invalidateLookupTags(String[] tagList) {
-        if (tagList != null) {
-            for (String tag : tagList) {
-                removeFromCache(cacheNameTagLookup, cacheKeyTagLookup(tag));
-            }
-        }
+    private void invalidate(TagLookupBo tagLookup) {
+        invalidateLookupTag(tagLookup.getTag());
+    }
+
+    private void invalidateLookupTag(String tag) {
+        removeFromCache(cacheNameTagLookup, cacheKeyTagLookup(tag));
     }
 
     private static String cacheKeyTagLookup(String tag) {
         return tag;
     }
-
-    // public static String cacheKey(TagLookupBo tagLookup) {
-    // return cacheKeyTagLookup(tagLookup.getTag());
-    // }
-    //
-    // public void invalidate(TagLookupBo tagLookup) {
-    //
-    // }
     /*----------------------------------------------------------------------*/
 
     /**
@@ -117,7 +110,11 @@ public class JdbcPushTokenDao extends BaseJdbcDao implements IPushTokenDao {
         SQL_GET_PUSHTOKEN = MessageFormat.format(SQL_GET_PUSHTOKEN, tableNamePushToken);
         SQL_UPDATE_PUSHTOKEN = MessageFormat.format(SQL_UPDATE_PUSHTOKEN, tableNamePushToken);
 
+        SQL_CREATE_TAG_LOOKUP = MessageFormat.format(SQL_CREATE_TAG_LOOKUP, tableNameTagLookup);
+        SQL_DELETE_TAG_LOOKUP = MessageFormat.format(SQL_DELETE_TAG_LOOKUP, tableNameTagLookup);
         SQL_GET_TAGLOOKUPS_BY_TAG = MessageFormat.format(SQL_GET_TAGLOOKUPS_BY_TAG,
+                tableNameTagLookup);
+        SQL_GET_TAGS_FOR_PUSH_TOKEN = MessageFormat.format(SQL_GET_TAGS_FOR_PUSH_TOKEN,
                 tableNameTagLookup);
 
         return this;
@@ -136,10 +133,19 @@ public class JdbcPushTokenDao extends BaseJdbcDao implements IPushTokenDao {
     private String SQL_UPDATE_PUSHTOKEN = "UPDATE {0} SET " + PushTokenBoMapper._COLS_UPDATE_CLAUSE
             + " WHERE " + PushTokenBoMapper._COLS_KEY_WHERE_CLAUSE;
 
-    private final static String[] COLS_TAGLOOKUP_ALL = { TagLookupBoMapper.COL_TAG,
-            TagLookupBoMapper.COL_TOKEN, TagLookupBoMapper.COL_OS };
-    private String SQL_GET_TAGLOOKUPS_BY_TAG = "SELECT " + StringUtils.join(COLS_TAGLOOKUP_ALL, ',')
-            + " FROM {0} WHERE " + TagLookupBoMapper.COL_TAG + "=?";
+    private String SQL_CREATE_TAG_LOOKUP = "INSERT INTO {0} ("
+            + StringUtils.join(TagLookupBoMapper._COLS_CREATE, ',') + ") VALUES ("
+            + StringUtils.repeat("?", ",", TagLookupBoMapper._COLS_CREATE.length) + ")";
+    private String SQL_DELETE_TAG_LOOKUP = "DELETE FROM {0} WHERE "
+            + TagLookupBoMapper._COLS_KEY_WHERE_CLAUSE;
+    private String SQL_GET_TAGS_FOR_PUSH_TOKEN = "SELECT "
+            + StringUtils.join(TagLookupBoMapper._COLS_ALL, ',') + " FROM {0} WHERE "
+            + TagLookupBoMapper.COL_APP_ID + "=? AND " + TagLookupBoMapper.COL_TOKEN + "=? AND "
+            + TagLookupBoMapper.COL_OS + "=?";
+
+    private String SQL_GET_TAGLOOKUPS_BY_TAG = "SELECT "
+            + StringUtils.join(TagLookupBoMapper._COLS_ALL, ',') + " FROM {0} WHERE "
+            + TagLookupBoMapper.COL_TAG + "=?";
 
     /**
      * {@inheritDoc}
@@ -154,7 +160,9 @@ public class JdbcPushTokenDao extends BaseJdbcDao implements IPushTokenDao {
             int numRows = execute(SQL_CREATE_PUSHTOKEN,
                     PushTokenBoMapper.valuesForCreate(pushToken));
             invalidate(pushToken, true);
-            invalidateLookupTags(pushToken.getTagsAsList());
+            if (numRows > 0) {
+                createTagLookups(pushToken);
+            }
             return numRows > 0;
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -170,7 +178,7 @@ public class JdbcPushTokenDao extends BaseJdbcDao implements IPushTokenDao {
             int numRows = execute(SQL_DELETE_PUSHTOKEN,
                     PushTokenBoMapper.valuesForDelete(pushToken));
             invalidate(pushToken, false);
-            invalidateLookupTags(pushToken.getTagsAsList());
+            deleteTagLookups(pushToken);
             return numRows > 0;
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -187,6 +195,7 @@ public class JdbcPushTokenDao extends BaseJdbcDao implements IPushTokenDao {
         if (existing == null) {
             return false;
         }
+        String oldTagChecksum = existing.getTagsChecksum();
 
         PushTokenBo pushToken = PushTokenBo.newInstance(_pushToken);
         Date TIMESTAMP = pushToken.getTimestampUpdate() != null ? pushToken.getTimestampUpdate()
@@ -195,11 +204,16 @@ public class JdbcPushTokenDao extends BaseJdbcDao implements IPushTokenDao {
         try {
             int nunRows = execute(SQL_UPDATE_PUSHTOKEN,
                     PushTokenBoMapper.valuesForUpdate(pushToken));
-            pushToken.setTimestampUpdate(TIMESTAMP);
             invalidate(pushToken, true);
-            if (!StringUtils.equals(existing.getTagsChecksum(), pushToken.getTagsChecksum())) {
-                invalidateLookupTags(existing.getTagsAsList());
-                invalidateLookupTags(pushToken.getTagsAsList());
+            if (!StringUtils.equals(oldTagChecksum, pushToken.getTagsChecksum())) {
+                // tag list has changed, update it
+                List<TagLookupBo> tags = getTagsForPushToken(existing);
+                if (tags != null) {
+                    for (TagLookupBo tag : tags) {
+                        delete(tag);
+                    }
+                }
+                createTagLookups(pushToken);
             }
             return nunRows > 0;
         } catch (SQLException e) {
@@ -215,6 +229,7 @@ public class JdbcPushTokenDao extends BaseJdbcDao implements IPushTokenDao {
         if (StringUtils.isBlank(appId) || StringUtils.isBlank(token) || StringUtils.isBlank(os)) {
             return null;
         }
+
         final String cacheKey = cacheKeyPushToken(token, os);
         PushTokenBo result = getFromCache(cacheNamePushToken, cacheKey, PushTokenBo.class);
         if (result == null) {
@@ -228,6 +243,60 @@ public class JdbcPushTokenDao extends BaseJdbcDao implements IPushTokenDao {
             }
         }
         return result;
+    }
+
+    /*----------------------------------------------------------------------*/
+
+    private boolean delete(TagLookupBo tagLookup) {
+        try {
+            int numRows = execute(SQL_DELETE_TAG_LOOKUP,
+                    TagLookupBoMapper.valuesForDelete(tagLookup));
+            invalidate(tagLookup);
+            return numRows > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void deleteTagLookups(PushTokenBo pushToken) {
+        String[] tagList = pushToken.getTagsAsList();
+        for (String tag : tagList) {
+            TagLookupBo tagLookup = TagLookupBo.newInstance(pushToken, tag);
+            if (tagLookup != null) {
+                delete(tagLookup);
+            }
+        }
+    }
+
+    private boolean create(TagLookupBo tagLookup) {
+        try {
+            int numRows = execute(SQL_CREATE_TAG_LOOKUP,
+                    TagLookupBoMapper.valuesForCreate(tagLookup));
+            invalidate(tagLookup);
+            return numRows > 0;
+        } catch (DuplicateKeyException dke) {
+            return false;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void createTagLookups(PushTokenBo pushToken) {
+        String[] tagList = pushToken.getTagsAsList();
+        for (String tag : tagList) {
+            TagLookupBo tagLookup = TagLookupBo.newInstance(pushToken.getAppId(), tag,
+                    pushToken.getToken(), pushToken.getOs());
+            create(tagLookup);
+        }
+    }
+
+    private List<TagLookupBo> getTagsForPushToken(PushTokenBo pushToken) {
+        try {
+            return executeSelect(TagLookupBoMapper.instance, SQL_GET_TAGS_FOR_PUSH_TOKEN,
+                    new Object[] { pushToken.getAppId(), pushToken.getToken(), pushToken.getOs() });
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @SuppressWarnings("unchecked")

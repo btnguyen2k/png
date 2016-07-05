@@ -5,6 +5,8 @@ import com.github.ddth.dao.BaseBo;
 
 public class TagLookupBo extends BaseBo {
 
+    public final static TagLookupBo[] EMPTY_ARRAY = new TagLookupBo[0];
+
     public final static TagLookupBo newInstance() {
         TagLookupBo bo = new TagLookupBo();
         return bo;
@@ -13,6 +15,16 @@ public class TagLookupBo extends BaseBo {
     public final static TagLookupBo newInstance(String appId, String tag, String token, String os) {
         TagLookupBo bo = newInstance();
         bo.setAppId(appId).setTag(tag).setToken(token).setOs(os);
+        return bo;
+    }
+
+    public final static TagLookupBo newInstance(PushTokenBo pushToken, String tag) {
+        return newInstance(pushToken.getAppId(), tag, pushToken.getToken(), pushToken.getOs());
+    }
+
+    public final static TagLookupBo newInstance(TagLookupBo another) {
+        TagLookupBo bo = new TagLookupBo();
+        bo.fromMap(another.toMap());
         return bo;
     }
 
@@ -39,7 +51,7 @@ public class TagLookupBo extends BaseBo {
     }
 
     public TagLookupBo setTag(String tag) {
-        setAttribute(ATTR_TOKEN, tag != null ? tag.trim().toLowerCase() : "");
+        setAttribute(ATTR_TAG, tag != null ? tag.trim().toLowerCase() : "");
         return this;
     }
 

@@ -1,37 +1,23 @@
 package akka.utils;
 
-import utils.PngConstants;
-
 public class AkkaConstants {
     /**
-     * Cluster node: master.
+     * Cluster node: frontend.
      * 
      * <ul>
-     * <li>keep track of cluster nodes ("tick" and "master" nodes)</li>
-     * <li>- leader "master" node fires {@link TickMessage} per tick (see
-     * {@link PngConstants#DELAY_TICK})</li>
+     * <li>Handles API requests from clients.</li>
+     * <li>Processes messages in app-event queue.</li>
      * </ul>
      */
-    public final static String ROLE_MASTER = "master";
+    public final static String ROLE_FRONTEND = "frontend";
 
     /**
-     * Cluster node: tick.
+     * Cluster node: backend.
      * 
      * <ul>
-     * <li>host "tick" actors that fire {@link TaskFireoffMessage} whenever a
-     * job is due to execute</li>
+     * <li>Processes messages in push-notification queue & pushes notifications.
+     * </li>
      * </ul>
      */
-    public final static String ROLE_TICK = "tick";
-
-    /**
-     * A "tick" message is published to this topic for every "TICK".
-     */
-    public final static String TOPIC_TICK = "TICK";
-
-    /**
-     * {@link TickManagerActor} listens to this topic for job's events
-     * (add/remove/update).
-     */
-    public final static String TOPIC_JOBEVENT = "JOB_EVENT";
+    public final static String ROLE_BACKEND = "backend";
 }

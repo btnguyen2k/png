@@ -29,6 +29,7 @@
 
 	<bean id="CACHE_FACTORY" class="com.github.ddth.cacheadapter.guava.GuavaCacheFactory"
 		scope="singleton" init-method="init" destroy-method="destroy">
+		<property name="cloneCacheEntries" value="true" />
 		<property name="defaultExpireAfterAccess" value="-1" />
 		<property name="defaultExpireAfterWrite" value="-1" />
 	</bean>

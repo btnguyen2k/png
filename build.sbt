@@ -31,9 +31,10 @@ resolvers += "Sonatype OSS Releases" at "https://oss.sonatype.org/content/reposi
 resolvers += "Sonatype OSS Snapshot" at "https://oss.sonatype.org/content/repositories/snapshots"
 
 val _springVersion           = "4.2.5.RELEASE"
-val _ddthCacheAdapterVersion = "0.4.1"
-val _ddthQueueVersion        = "0.4.1.1"
+val _ddthCacheAdapterVersion = "0.4.1.4"
 val _ddthCommons             = "0.4.0"
+val _ddthDao                 = "0.5.0.5"
+val _ddthQueueVersion        = "0.4.2"
 val _akkaVersion             = "2.4.4"
 
 libraryDependencies ++= Seq(
@@ -61,6 +62,9 @@ libraryDependencies ++= Seq(
 
     "com.github.ddth"           %  "ddth-commons-core"          % _ddthCommons,
     "com.github.ddth"           %  "ddth-commons-serialization" % _ddthCommons,
+
+    "com.github.ddth"           %  "ddth-dao-core"              % _ddthDao,
+    "com.github.ddth"           %  "ddth-dao-jdbc"              % _ddthDao,
 
     // queue system: Kafka
     "com.github.ddth"           %  "ddth-kafka"                 % "1.2.1",

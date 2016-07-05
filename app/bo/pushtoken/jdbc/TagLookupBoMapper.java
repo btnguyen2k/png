@@ -30,6 +30,10 @@ public class TagLookupBoMapper implements RowMapper<TagLookupBo> {
         return new Object[] { bo.getAppId(), bo.getTag(), bo.getToken(), bo.getOs() };
     }
 
+    public static Object[] valuesForDelete(String appId, String tag, String token, String os) {
+        return new Object[] { appId, tag, token, os };
+    }
+
     public static Object[] valuesForSelect(String appId, String tag, String token, String os) {
         return new Object[] { appId, tag, token, os };
     }

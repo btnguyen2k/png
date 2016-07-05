@@ -8,7 +8,6 @@ import bo.app.IAppDao;
 import bo.pushtoken.IPushTokenDao;
 import bo.user.IUserDao;
 import play.Application;
-import queue.IQueueService;
 
 public interface IRegistry {
 
@@ -91,17 +90,17 @@ public interface IRegistry {
     public IUserDao getUserDao();
 
     /**
-     * Gets {@link IQueueService} to push/retrieve task fireoff notifications.
+     * Gets {@link IQueue} to buffer application's events.
      * 
      * @return
      */
-    public IQueueService getQueueService();
+    public IQueue getQueueAppEvents();
 
     /**
-     * Gets {@link IQueue} to buffer task results/feedbacks from workers.
+     * Gets {@link IQueue} to buffer push notifications.
      * 
      * @return
      */
-    public IQueue getQueueTaskFeedback();
+    public IQueue getQueuePushNotifications();
 
 }

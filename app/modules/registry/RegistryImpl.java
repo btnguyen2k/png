@@ -30,7 +30,6 @@ import bo.user.IUserDao;
 import play.Application;
 import play.Logger;
 import play.inject.ApplicationLifecycle;
-import queue.IQueueService;
 import utils.NetworkUtils;
 import utils.PngGlobals;
 
@@ -251,15 +250,15 @@ public class RegistryImpl implements IRegistry {
      * {@inheritDoc}
      */
     @Override
-    public IQueue getQueueTaskFeedback() {
-        return appContext.getBean("QUEUE_TASK_FEEDBACK", IQueue.class);
+    public IQueue getQueueAppEvents() {
+        return appContext.getBean("QUEUE_APP_EVENT", IQueue.class);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public IQueueService getQueueService() {
-        return appContext.getBean(IQueueService.class);
+    public IQueue getQueuePushNotifications() {
+        return appContext.getBean("QUEUE_PUSH_NOTIFICATION", IQueue.class);
     }
 }
