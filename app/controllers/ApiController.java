@@ -68,12 +68,19 @@ public class ApiController extends BaseController {
     public final static String PARAM_OS = "os";
     public final static String PARAM_TAGS = "tags";
 
-    private final static String API_ERROR_MISSING_TOKEN = "Parameter [" + PARAM_TOKEN
-            + "] is missing or invalid!";
-    private final static String API_ERROR_MISSING_OS = "Parameter [" + PARAM_OS
-            + "] is missing or invalid!";
     private final static String API_ERROR_INVALID_TAGS = "Parameter [" + PARAM_TAGS
             + "] is invalid!";
+
+    private Result validateRequestParams(Map<String, Object> params, String... fields) {
+        for (String field : fields) {
+            String fieldValue = DPathUtils.getValue(params, field, String.class);
+            if (StringUtils.isBlank(fieldValue)) {
+                return doResponseJson(PngConstants.RESPONSE_CLIENT_ERROR,
+                        "Field [" + field + "] is missting!");
+            }
+        }
+        return null;
+    }
 
     /**
      * Adds/Updates a push notification token.
@@ -96,16 +103,12 @@ public class ApiController extends BaseController {
             String appId = reqHeaders.get(HEADER_APP_ID);
 
             Map<String, Object> reqParams = parseRequestContent();
-
+            Result result = validateRequestParams(reqParams, PARAM_TOKEN, PARAM_OS);
+            if (result != null) {
+                return result;
+            }
             String token = DPathUtils.getValue(reqParams, PARAM_TOKEN, String.class);
-            if (StringUtils.isBlank(token)) {
-                return doResponseJson(PngConstants.RESPONSE_CLIENT_ERROR, API_ERROR_MISSING_TOKEN);
-            }
-
             String os = DPathUtils.getValue(reqParams, PARAM_OS, String.class);
-            if (StringUtils.isBlank(os)) {
-                return doResponseJson(PngConstants.RESPONSE_CLIENT_ERROR, API_ERROR_MISSING_OS);
-            }
 
             List<String> tags = new ArrayList<>();
             {
@@ -152,6 +155,16 @@ public class ApiController extends BaseController {
         }
     }
 
+    @ApiAuthRequired
+    public Result apiGetTokenGet() {
+        return apiGetToken();
+    }
+
+    @ApiAuthRequired
+    public Result apiGetTokenPost() {
+        return apiGetToken();
+    }
+
     /**
      * Fetches an existing push notification token.
      * 
@@ -165,22 +178,18 @@ public class ApiController extends BaseController {
      * 
      * @return
      */
-    @ApiAuthRequired
     public Result apiGetToken() {
         try {
             Map<String, String> reqHeaders = PngUtils.parseRequestHeaders(request(), HEADER_APP_ID);
             String appId = reqHeaders.get(HEADER_APP_ID);
 
             Map<String, Object> reqParams = parseRequestContent();
+            Result result = validateRequestParams(reqParams, PARAM_TOKEN, PARAM_OS);
+            if (result != null) {
+                return result;
+            }
             String token = DPathUtils.getValue(reqParams, PARAM_TOKEN, String.class);
-            if (StringUtils.isBlank(token)) {
-                return doResponseJson(PngConstants.RESPONSE_CLIENT_ERROR, API_ERROR_MISSING_TOKEN);
-            }
-
             String os = DPathUtils.getValue(reqParams, PARAM_OS, String.class);
-            if (StringUtils.isBlank(os)) {
-                return doResponseJson(PngConstants.RESPONSE_CLIENT_ERROR, API_ERROR_MISSING_OS);
-            }
 
             IPushTokenDao pushTokenDao = getRegistry().getPushTokenDao();
             PushTokenBo pushToken = pushTokenDao.getPushToken(appId, token, os);
@@ -196,6 +205,51 @@ public class ApiController extends BaseController {
                 return doResponseJson(PngConstants.RESPONSE_NOT_FOUND, "Push token not found!");
             }
 
+        } catch (Exception e) {
+            return doResponseJson(PngConstants.RESPONSE_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    /**
+     * Deletes an existing push notification token.
+     * 
+     * <p>
+     * Params:
+     * <ul>
+     * <li>{@code token}: (required) String, push notification token.</li>
+     * <li>{@code os}: (required) String, OS name/identifier.</li>
+     * </ul>
+     * </p>
+     * 
+     * @return
+     */
+    @ApiAuthRequired
+    public Result apiDeleteToken() {
+        try {
+            Map<String, String> reqHeaders = PngUtils.parseRequestHeaders(request(), HEADER_APP_ID);
+            String appId = reqHeaders.get(HEADER_APP_ID);
+
+            Map<String, Object> reqParams = parseRequestContent();
+            Result result = validateRequestParams(reqParams, PARAM_TOKEN, PARAM_OS);
+            if (result != null) {
+                return result;
+            }
+            String token = DPathUtils.getValue(reqParams, PARAM_TOKEN, String.class);
+            String os = DPathUtils.getValue(reqParams, PARAM_OS, String.class);
+
+            if (Logger.isDebugEnabled()) {
+                String clientIp = PngUtils.getClientIp(request());
+                Logger.debug("Request [" + request().uri() + "] from [" + clientIp + "], params: "
+                        + reqParams);
+            }
+
+            IQueue queue = getRegistry().getQueueAppEvents();
+            if (PngUtils.queuePushTokenDelete(queue, appId, token, os)) {
+                return doResponseJson(PngConstants.RESPONSE_OK, "true", true);
+            } else {
+                Logger.warn("Cannot put push-token-delete message to queue.");
+                return doResponseJson(PngConstants.RESPONSE_OK, "false", false);
+            }
         } catch (Exception e) {
             return doResponseJson(PngConstants.RESPONSE_SERVER_ERROR, e.getMessage());
         }

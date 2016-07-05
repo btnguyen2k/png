@@ -21,7 +21,9 @@ GET     /cp/deleteApp                           controllers.AdminCPController.de
 POST    /cp/deleteApp                           controllers.AdminCPController.deleteApplicationSubmit(id: String)
 
 POST    /api/addToken                           controllers.ApiController.apiAddToken()
-POST    /api/getToken                           controllers.ApiController.apiGetToken()
+GET     /api/getToken                           controllers.ApiController.apiGetTokenGet()
+POST    /api/getToken                           controllers.ApiController.apiGetTokenPost()
+POST    /api/deleteToken                        controllers.ApiController.apiDeleteToken()
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file                           controllers.Assets.versioned(path="/public", file: Asset)

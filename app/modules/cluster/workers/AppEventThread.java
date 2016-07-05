@@ -1,12 +1,14 @@
-package modules.cluster;
+package modules.cluster.workers;
 
 import com.github.ddth.queue.IQueueMessage;
 
 import bo.pushtoken.IPushTokenDao;
 import bo.pushtoken.PushTokenBo;
+import modules.cluster.BaseQueueThread;
 import modules.registry.IRegistry;
 import play.Logger;
 import queue.message.BaseMessage;
+import queue.message.DeletePushNotificationMessage;
 import queue.message.UpdatePushNotificationMessage;
 import utils.PngUtils;
 
@@ -44,6 +46,15 @@ public class AppEventThread extends BaseQueueThread {
         return result;
     }
 
+    private boolean deletePushNotification(DeletePushNotificationMessage msg) {
+        IPushTokenDao pushTokenDao = getRegistry().getPushTokenDao();
+        String appId = msg.getAppId();
+        String token = msg.getToken();
+        String os = msg.getOs();
+        PushTokenBo pushToken = pushTokenDao.getPushToken(appId, token, os);
+        return pushToken != null ? pushTokenDao.delete(pushToken) : true;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -56,6 +67,8 @@ public class AppEventThread extends BaseQueueThread {
                     + baseMsg);
             if (baseMsg instanceof UpdatePushNotificationMessage) {
                 return updatePushNotification((UpdatePushNotificationMessage) baseMsg);
+            } else if (baseMsg instanceof DeletePushNotificationMessage) {
+                return deletePushNotification((DeletePushNotificationMessage) baseMsg);
             }
         } else {
             Logger.debug("\tMessage from queue: " + data);

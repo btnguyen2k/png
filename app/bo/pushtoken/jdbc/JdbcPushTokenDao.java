@@ -259,12 +259,9 @@ public class JdbcPushTokenDao extends BaseJdbcDao implements IPushTokenDao {
     }
 
     private void deleteTagLookups(PushTokenBo pushToken) {
-        String[] tagList = pushToken.getTagsAsList();
-        for (String tag : tagList) {
-            TagLookupBo tagLookup = TagLookupBo.newInstance(pushToken, tag);
-            if (tagLookup != null) {
-                delete(tagLookup);
-            }
+        List<TagLookupBo> tags = getTagsForPushToken(pushToken);
+        for (TagLookupBo tag : tags) {
+            delete(tag);
         }
     }
 

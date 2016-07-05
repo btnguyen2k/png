@@ -19,6 +19,7 @@ import com.github.ddth.queue.impl.universal.UniversalQueueMessage;
 import play.Logger;
 import play.mvc.Http.Request;
 import queue.message.BaseMessage;
+import queue.message.DeletePushNotificationMessage;
 import queue.message.UpdatePushNotificationMessage;
 
 public class PngUtils {
@@ -98,6 +99,15 @@ public class PngUtils {
 
     public static <T extends BaseMessage> T fromBytes(byte[] data, Class<T> clazz) {
         return SerializationUtils.fromByteArray(data, clazz);
+    }
+
+    public static boolean queuePushTokenDelete(IQueue queue, String appId, String token,
+            String os) {
+        DeletePushNotificationMessage msg = DeletePushNotificationMessage.newInstance(appId, token,
+                os);
+        UniversalQueueMessage queueMsg = UniversalQueueMessage.newInstance();
+        queueMsg.content(toBytes(msg));
+        return queue.queue(queueMsg);
     }
 
     public static boolean queuePushTokenUpdate(IQueue queue, String appId, String token, String os,

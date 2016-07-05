@@ -15,6 +15,8 @@ import com.typesafe.config.ConfigFactory;
 import akka.actor.ActorSystem;
 import akka.cluster.Cluster;
 import akka.utils.AkkaConstants;
+import modules.cluster.workers.AppEventThread;
+import modules.cluster.workers.PushNotificationThread;
 import modules.registry.IRegistry;
 import play.Logger;
 import play.inject.ApplicationLifecycle;

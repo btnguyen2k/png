@@ -11,46 +11,6 @@ import com.github.ddth.dao.BaseBo;
  */
 public abstract class BaseMessage extends BaseBo {
 
-    // /**
-    // * Deserializes from a JSON string. See {@link #toJson()}.
-    // *
-    // * @param dataJson
-    // * @return
-    // */
-    // public static <T extends BaseMessage> T deserialize(String dataJson,
-    // Class<T> clazz) {
-    // return dataJson != null ? SerializationUtils.fromJsonString(dataJson,
-    // clazz) : null;
-    // }
-    //
-    // /**
-    // * Deserializes from a {@code byte[]}. See {@link #toBytes()}.
-    // *
-    // * @param dataBytes
-    // * @return
-    // */
-    // public static BaseMessage deserialize(byte[] dataBytes) {
-    // return deserialize(dataBytes, BaseMessage.class);
-    // }
-    //
-    // /**
-    // * Deserializes from a {@code byte[]}. See {@link #toBytes()}.
-    // *
-    // * @param dataBytes
-    // * @return
-    // */
-    // public static <T extends BaseMessage> T deserialize(byte[] dataBytes,
-    // Class<T> clazz) {
-    // try {
-    // return dataBytes != null ? SerializationUtils.fromByteArray(dataBytes,
-    // clazz) : null;
-    // } catch (Exception e) {
-    // throw new RuntimeException(e);
-    // }
-    // }
-
-    /*----------------------------------------------------------------------*/
-
     protected final static String ATTR_ID = "id";
     protected final static String ATTR_TIMESTAMP_MS = "t";
     protected final static String ATTR_APP_ID = "app_id";

@@ -1,7 +1,8 @@
-package modules.cluster;
+package modules.cluster.workers;
 
 import com.github.ddth.queue.IQueueMessage;
 
+import modules.cluster.BaseQueueThread;
 import modules.registry.IRegistry;
 
 /**
