@@ -1,7 +1,7 @@
 package controllers;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +22,7 @@ import play.Logger;
 import play.mvc.Http.RawBuffer;
 import play.mvc.Http.RequestBody;
 import play.mvc.Result;
+import queue.message.SendPushNotificationsMessage;
 import utils.PngConstants;
 import utils.PngUtils;
 
@@ -67,16 +68,20 @@ public class ApiController extends BaseController {
     public final static String PARAM_TOKEN = "token";
     public final static String PARAM_OS = "os";
     public final static String PARAM_TAGS = "tags";
+    public final static String PARAM_TARGETS = "targets";
+    public final static String PARAM_TITLE = "title";
+    public final static String PARAM_CONTENT = "content";
 
-    private final static String API_ERROR_INVALID_TAGS = "Parameter [" + PARAM_TAGS
-            + "] is invalid!";
+    // private final static String API_ERROR_INVALID_TAGS = "Parameter [" +
+    // PARAM_TAGS
+    // + "] is invalid!";
 
     private Result validateRequestParams(Map<String, Object> params, String... fields) {
         for (String field : fields) {
             String fieldValue = DPathUtils.getValue(params, field, String.class);
             if (StringUtils.isBlank(fieldValue)) {
                 return doResponseJson(PngConstants.RESPONSE_CLIENT_ERROR,
-                        "Field [" + field + "] is missting!");
+                        "Field [" + field + "] is missting or invalid!");
             }
         }
         return null;
@@ -110,32 +115,8 @@ public class ApiController extends BaseController {
             String token = DPathUtils.getValue(reqParams, PARAM_TOKEN, String.class);
             String os = DPathUtils.getValue(reqParams, PARAM_OS, String.class);
 
-            List<String> tags = new ArrayList<>();
-            {
-                Object tagsObj = DPathUtils.getValue(reqParams, PARAM_TAGS);
-                if (tagsObj instanceof List) {
-                    tagsObj = ((List<?>) tagsObj).toArray();
-                }
-                if (tagsObj instanceof String[]) {
-                    for (String tag : (String[]) tagsObj) {
-                        tags.add(tag);
-                    }
-                } else if (tagsObj instanceof Object[]) {
-                    for (Object tag : (Object[]) tagsObj) {
-                        tags.add(tag.toString());
-                    }
-                } else if (tagsObj instanceof String) {
-                    String[] tokens = ((String) tagsObj).split("[,;\\s]+");
-                    for (String tag : tokens) {
-                        tags.add(tag);
-                    }
-                } else if (tagsObj != null) {
-                    if (StringUtils.isBlank(os)) {
-                        return doResponseJson(PngConstants.RESPONSE_CLIENT_ERROR,
-                                API_ERROR_INVALID_TAGS);
-                    }
-                }
-            }
+            Collection<String> tags = PngUtils
+                    .parseTags(DPathUtils.getValue(reqParams, PARAM_TAGS));
 
             if (Logger.isDebugEnabled()) {
                 String clientIp = PngUtils.getClientIp(request());
@@ -255,4 +236,62 @@ public class ApiController extends BaseController {
         }
     }
 
+    /**
+     * Push notifications.
+     * 
+     * <p>
+     * Params:
+     * <ul>
+     * <li>{@code title}: (optional) String, notification's title.</li>
+     * <li>{@code content}: (required) String, notification's content.</li>
+     * <li>{@code targets}: (required) list of maps, map's fields: {@code tags}
+     * or a pair of {@code token} and {@code os}
+     * <ul>
+     * <li>{@code tags}: String or array of Strings.</li>
+     * <li>{@code token}: String, push notification token.</li>
+     * <li>{@code os}: String, OS name/identifier.</li>
+     * </ul>
+     * </li>
+     * </ul>
+     * </p>
+     * 
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public Result apiPushNotifications() {
+        try {
+            Map<String, String> reqHeaders = PngUtils.parseRequestHeaders(request(), HEADER_APP_ID);
+            String appId = reqHeaders.get(HEADER_APP_ID);
+
+            Map<String, Object> reqParams = parseRequestContent();
+            Result result = validateRequestParams(reqParams, PARAM_CONTENT);
+            if (result != null) {
+                return result;
+            }
+            String title = DPathUtils.getValue(reqParams, PARAM_TITLE, String.class);
+            String content = DPathUtils.getValue(reqParams, PARAM_CONTENT, String.class);
+            Collection<SendPushNotificationsMessage.Target> targets = PngUtils
+                    .parseTargets(DPathUtils.getValue(reqParams, PARAM_TARGETS, List.class));
+            if (targets == null || targets.size() == 0) {
+                return doResponseJson(PngConstants.RESPONSE_CLIENT_ERROR,
+                        "Field [" + PARAM_TARGETS + "] is missing or invalid!");
+            }
+
+            if (Logger.isDebugEnabled()) {
+                String clientIp = PngUtils.getClientIp(request());
+                Logger.debug("Request [" + request().uri() + "] from [" + clientIp + "], params: "
+                        + reqParams);
+            }
+
+            IQueue queue = getRegistry().getQueueAppEvents();
+            if (PngUtils.queuePushNotificationsSend(queue, appId, title, content, targets)) {
+                return doResponseJson(PngConstants.RESPONSE_OK, "true", true);
+            } else {
+                Logger.warn("Cannot put push-notifications-send message to queue.");
+                return doResponseJson(PngConstants.RESPONSE_OK, "false", false);
+            }
+        } catch (Exception e) {
+            return doResponseJson(PngConstants.RESPONSE_SERVER_ERROR, e.getMessage());
+        }
+    }
 }

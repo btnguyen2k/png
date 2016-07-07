@@ -1,7 +1,7 @@
 package queue.message;
 
+import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -26,7 +26,7 @@ public class UpdatePushNotificationMessage extends BaseMessage {
     }
 
     public static UpdatePushNotificationMessage newInstance(String appId, String token, String os,
-            List<String> tags) {
+            Collection<String> tags) {
         UpdatePushNotificationMessage bo = newInstance(appId, token, os);
         bo.addTags(tags.toArray(ArrayUtils.EMPTY_STRING_ARRAY));
         return bo;

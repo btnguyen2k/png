@@ -1,25 +1,31 @@
 package utils;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import com.github.ddth.commons.utils.DPathUtils;
 import com.github.ddth.commons.utils.IdGenerator;
 import com.github.ddth.commons.utils.SerializationUtils;
 import com.github.ddth.queue.IQueue;
 import com.github.ddth.queue.impl.universal.UniversalQueueMessage;
 
+import controllers.ApiController;
 import play.Logger;
 import play.mvc.Http.Request;
 import queue.message.BaseMessage;
 import queue.message.DeletePushNotificationMessage;
+import queue.message.SendPushNotificationsMessage;
 import queue.message.UpdatePushNotificationMessage;
 
 public class PngUtils {
@@ -46,6 +52,52 @@ public class PngUtils {
             }
         }
         return clientIPHeader;
+    }
+
+    public static Collection<String> parseTags(Object tagsData) {
+        Set<String> tags = new HashSet<>();
+        if (tagsData instanceof List) {
+            tagsData = ((List<?>) tagsData).toArray();
+        }
+        if (tagsData instanceof String[]) {
+            for (String tag : (String[]) tagsData) {
+                tags.add(tag);
+            }
+        } else if (tagsData instanceof Object[]) {
+            for (Object tag : (Object[]) tagsData) {
+                tags.add(tag.toString());
+            }
+        } else if (tagsData instanceof String) {
+            String[] tokens = ((String) tagsData).split("[,;\\s]+");
+            for (String tag : tokens) {
+                tags.add(tag);
+            }
+        }
+        return tags;
+    }
+
+    public static Collection<SendPushNotificationsMessage.Target> parseTargets(
+            List<Map<String, Object>> targetsData) {
+        if (targetsData == null || targetsData.size() == 0) {
+            return null;
+        }
+        Collection<SendPushNotificationsMessage.Target> result = new HashSet<>();
+        for (Map<String, Object> item : targetsData) {
+            String token = DPathUtils.getValue(item, ApiController.PARAM_TOKEN, String.class);
+            String os = DPathUtils.getValue(item, ApiController.PARAM_OS, String.class);
+            Collection<String> tags = parseTags(
+                    DPathUtils.getValue(item, ApiController.PARAM_TAGS));
+            SendPushNotificationsMessage.Target target = null;
+            if (tags != null && tags.size() > 0) {
+                target = SendPushNotificationsMessage.Target.newInstance(tags);
+            } else {
+                target = SendPushNotificationsMessage.Target.newInstance(token, os);
+            }
+            if (target != null) {
+                result.add(target);
+            }
+        }
+        return result;
     }
 
     public static Map<String, String> parseRequestHeaders(Request request) {
@@ -101,6 +153,15 @@ public class PngUtils {
         return SerializationUtils.fromByteArray(data, clazz);
     }
 
+    public static boolean queuePushNotificationsSend(IQueue queue, String appId, String title,
+            String content, Collection<SendPushNotificationsMessage.Target> targets) {
+        SendPushNotificationsMessage msg = SendPushNotificationsMessage.newInstance(appId, title,
+                content, targets);
+        UniversalQueueMessage queueMsg = UniversalQueueMessage.newInstance();
+        queueMsg.content(toBytes(msg));
+        return queue.queue(queueMsg);
+    }
+
     public static boolean queuePushTokenDelete(IQueue queue, String appId, String token,
             String os) {
         DeletePushNotificationMessage msg = DeletePushNotificationMessage.newInstance(appId, token,
@@ -111,7 +172,7 @@ public class PngUtils {
     }
 
     public static boolean queuePushTokenUpdate(IQueue queue, String appId, String token, String os,
-            List<String> tags) {
+            Collection<String> tags) {
         UpdatePushNotificationMessage msg = UpdatePushNotificationMessage.newInstance(appId, token,
                 os, tags);
         UniversalQueueMessage queueMsg = UniversalQueueMessage.newInstance();

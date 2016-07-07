@@ -1,5 +1,11 @@
 package modules.cluster.workers;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import org.apache.commons.lang3.StringUtils;
+
+import com.github.ddth.queue.IQueue;
 import com.github.ddth.queue.IQueueMessage;
 
 import bo.pushtoken.IPushTokenDao;
@@ -9,6 +15,7 @@ import modules.registry.IRegistry;
 import play.Logger;
 import queue.message.BaseMessage;
 import queue.message.DeletePushNotificationMessage;
+import queue.message.SendPushNotificationsMessage;
 import queue.message.UpdatePushNotificationMessage;
 import utils.PngUtils;
 
@@ -22,6 +29,15 @@ public class AppEventThread extends BaseQueueThread {
 
     public AppEventThread(IRegistry registry) {
         super(AppEventThread.class.getSimpleName(), registry, registry.getQueueAppEvents());
+    }
+
+    private boolean deletePushNotification(DeletePushNotificationMessage msg) {
+        IPushTokenDao pushTokenDao = getRegistry().getPushTokenDao();
+        String appId = msg.getAppId();
+        String token = msg.getToken();
+        String os = msg.getOs();
+        PushTokenBo pushToken = pushTokenDao.getPushToken(appId, token, os);
+        return pushToken != null ? pushTokenDao.delete(pushToken) : true;
     }
 
     private boolean updatePushNotification(UpdatePushNotificationMessage msg) {
@@ -40,19 +56,49 @@ public class AppEventThread extends BaseQueueThread {
             pushToken.setTags(msg.getTags());
             result = pushTokenDao.update(pushToken);
         }
-        if (result) {
-
-        }
         return result;
     }
 
-    private boolean deletePushNotification(DeletePushNotificationMessage msg) {
+    private boolean sendPushNotifications(SendPushNotificationsMessage msg) {
+        Set<PushTokenBo> pushTokensToSend = new HashSet<>();
         IPushTokenDao pushTokenDao = getRegistry().getPushTokenDao();
         String appId = msg.getAppId();
-        String token = msg.getToken();
-        String os = msg.getOs();
-        PushTokenBo pushToken = pushTokenDao.getPushToken(appId, token, os);
-        return pushToken != null ? pushTokenDao.delete(pushToken) : true;
+        String title = msg.getTitle();
+        String content = msg.getContent();
+
+        SendPushNotificationsMessage.Target[] targets = msg.getTargets();
+        for (SendPushNotificationsMessage.Target target : targets) {
+            String token = target.getToken();
+            String os = target.getOs();
+            String[] tags = target.getTags();
+            if (!StringUtils.isBlank(token) && !StringUtils.isBlank(os)) {
+                PushTokenBo pushToken = pushTokenDao.getPushToken(appId, token, os);
+                if (pushToken != null) {
+                    pushTokensToSend.add(pushToken);
+                }
+            } else {
+                PushTokenBo[] pushTokens = pushTokenDao.lookupPushTokens(tags);
+                if (pushTokens != null) {
+                    for (PushTokenBo pushToken : pushTokens) {
+                        pushTokensToSend.add(pushToken);
+                    }
+                }
+            }
+        }
+
+        if (Logger.isDebugEnabled()) {
+            Logger.debug("Sending notification [" + title + "/" + content + "] from [" + appId
+                    + "] to " + pushTokensToSend);
+        }
+
+        if (pushTokensToSend.size() == 0) {
+            return false;
+        }
+        IQueue queue = getRegistry().getQueuePushNotifications();
+        for (PushTokenBo pushToken : pushTokensToSend) {
+            PngUtils.queuePushNotificationDelivery(queue, appId, title, content, pushToken);
+        }
+        return true;
     }
 
     /**
@@ -69,6 +115,8 @@ public class AppEventThread extends BaseQueueThread {
                 return updatePushNotification((UpdatePushNotificationMessage) baseMsg);
             } else if (baseMsg instanceof DeletePushNotificationMessage) {
                 return deletePushNotification((DeletePushNotificationMessage) baseMsg);
+            } else if (baseMsg instanceof SendPushNotificationsMessage) {
+                return sendPushNotifications((SendPushNotificationsMessage) baseMsg);
             }
         } else {
             Logger.debug("\tMessage from queue: " + data);
