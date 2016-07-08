@@ -66,6 +66,8 @@ libraryDependencies ++= Seq(
     "com.github.ddth"           %  "ddth-dao-core"              % _ddthDao,
     "com.github.ddth"           %  "ddth-dao-jdbc"              % _ddthDao,
 
+    "com.notnoop.apns"          %  "apns"                       % "1.0.0.Beta6",
+
     // queue system: Kafka
     "com.github.ddth"           %  "ddth-kafka"                 % "1.2.1",
     "com.github.ddth"           %  "ddth-queue-core"            % _ddthQueueVersion,

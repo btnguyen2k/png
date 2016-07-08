@@ -1,5 +1,7 @@
 package modules.cluster.workers;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -94,9 +96,21 @@ public class AppEventThread extends BaseQueueThread {
         if (pushTokensToSend.size() == 0) {
             return false;
         }
+
         IQueue queue = getRegistry().getQueuePushNotifications();
+        Collection<PushTokenBo> pushTokens = new ArrayList<>();
         for (PushTokenBo pushToken : pushTokensToSend) {
-            PngUtils.queuePushNotificationDelivery(queue, appId, title, content, pushToken);
+            pushTokens.add(pushToken);
+            if (pushTokens.size() == 10) {
+                PngUtils.queuePushNotificationDelivery(queue, appId, title, content,
+                        pushTokens.toArray(PushTokenBo.EMPTY_ARRAY));
+                pushTokens = new ArrayList<>();
+            }
+        }
+        if (pushTokens.size() > 0) {
+            PngUtils.queuePushNotificationDelivery(queue, appId, title, content,
+                    pushTokens.toArray(PushTokenBo.EMPTY_ARRAY));
+            pushTokens = new ArrayList<>();
         }
         return true;
     }
@@ -109,8 +123,12 @@ public class AppEventThread extends BaseQueueThread {
         Object data = queueMsg.qData();
         if (data instanceof byte[]) {
             BaseMessage baseMsg = PngUtils.fromBytes((byte[]) data, BaseMessage.class);
-            Logger.debug("\tMessage from queue [" + baseMsg.getClass().getSimpleName() + "]: "
-                    + baseMsg);
+
+            if (Logger.isDebugEnabled()) {
+                Logger.debug("\tMessage from queue [" + baseMsg.getClass().getSimpleName() + "]: "
+                        + baseMsg);
+            }
+
             if (baseMsg instanceof UpdatePushNotificationMessage) {
                 return updatePushNotification((UpdatePushNotificationMessage) baseMsg);
             } else if (baseMsg instanceof DeletePushNotificationMessage) {
@@ -119,7 +137,9 @@ public class AppEventThread extends BaseQueueThread {
                 return sendPushNotifications((SendPushNotificationsMessage) baseMsg);
             }
         } else {
-            Logger.debug("\tMessage from queue: " + data);
+            if (Logger.isDebugEnabled()) {
+                Logger.debug("\tMessage from queue: " + data);
+            }
         }
         return false;
     }

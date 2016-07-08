@@ -20,11 +20,13 @@ import com.github.ddth.commons.utils.SerializationUtils;
 import com.github.ddth.queue.IQueue;
 import com.github.ddth.queue.impl.universal.UniversalQueueMessage;
 
+import bo.pushtoken.PushTokenBo;
 import controllers.ApiController;
 import play.Logger;
 import play.mvc.Http.Request;
 import queue.message.BaseMessage;
 import queue.message.DeletePushNotificationMessage;
+import queue.message.DeliverPushNotificationMessage;
 import queue.message.SendPushNotificationsMessage;
 import queue.message.UpdatePushNotificationMessage;
 
@@ -157,6 +159,15 @@ public class PngUtils {
             String content, Collection<SendPushNotificationsMessage.Target> targets) {
         SendPushNotificationsMessage msg = SendPushNotificationsMessage.newInstance(appId, title,
                 content, targets);
+        UniversalQueueMessage queueMsg = UniversalQueueMessage.newInstance();
+        queueMsg.content(toBytes(msg));
+        return queue.queue(queueMsg);
+    }
+
+    public static boolean queuePushNotificationDelivery(IQueue queue, String appId, String title,
+            String content, PushTokenBo[] pushTokens) {
+        DeliverPushNotificationMessage msg = DeliverPushNotificationMessage.newInstance(appId,
+                title, content, pushTokens);
         UniversalQueueMessage queueMsg = UniversalQueueMessage.newInstance();
         queueMsg.content(toBytes(msg));
         return queue.queue(queueMsg);

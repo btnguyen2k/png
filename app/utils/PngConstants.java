@@ -30,6 +30,12 @@ public class PngConstants {
 
     public final static long MAX_IOS_P12_FILE_SIZE = 32000;
 
+    public final static String OS_IOS = "IOS";
+
+    /* Android OS */
+    public final static String OS_AOS = "AOS";
+    public final static String OS_ANDROID = "ANDROID";
+
     public final static int RESPONSE_OK = 200;
     public final static int RESPONSE_NOT_FOUND = 404;
     public final static int RESPONSE_ACCESS_DENIED = 403;
